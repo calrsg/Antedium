@@ -48,47 +48,6 @@ class Galassist(commands.Bot):
         print("All cogs parsed.")
         await self.tree.sync()
 
-    # @bot.event
-    # async def on_command_error(self, ctx, error):
-    #     if isinstance(error, commands.MissingRequiredArgument):
-    #         await ctx.send("Missing argument.")
-    #         print(error)
-    #     if isinstance(error, commands.CommandNotFound):
-    #         print(error)
-    #         return
-    #     if isinstance(error, commands.PrivateMessageOnly):
-    #         print(error)
-    #         await ctx.send("This command is for DM's only.")
-    #     if isinstance(error, commands.NotOwner):
-    #         print(error)
-    #         await ctx.send("Bot author command only.")
-    #     if isinstance(error, commands.UserNotFound):
-    #         print(error)
-    #         await ctx.send("Specified user not found.")
-    #     if isinstance(error, commands.MemberNotFound):
-    #         print(error)
-    #         await ctx.send("Specified member not found.")
-    #     if isinstance(error, commands.MessageNotFound):
-    #         print(error)
-    #         await ctx.send("Specified message not found.")
-    #     if isinstance(error, commands.ChannelNotFound):
-    #         print(error)
-    #         await ctx.send("Specified channel not found.")
-    #     if isinstance(error, commands.MissingAnyRole):
-    #         print(error)
-    #         await ctx.send("You do not have the role required for this command.")
-    #     if isinstance(error, commands.MissingPermissions):
-    #         print(error)
-    #         await ctx.send("You do not have permission for this command")
-    #     if isinstance(error, commands.BotMissingRole):
-    #         print(error)
-    #         await ctx.send("I do not have the role required for this command.")
-    #     if isinstance(error, commands.BotMissingPermissions):
-    #         print(error)
-    #         await ctx.send("I do not have permission for this command")
-    #     else:
-    #         print(error)
-
     def run(self):
         super().run(self.discord_bot_token)
 
