@@ -5,7 +5,7 @@ import json
 
 dev = True
 
-class Galassist(commands.Bot):
+class Core(commands.Bot):
 
     intents = discord.Intents.default()
 
@@ -53,7 +53,7 @@ class Galassist(commands.Bot):
 
 
 if __name__ == "__main__":
-    galassist = Galassist()
+    galassist = Core()
     galassist.run()
 
 
