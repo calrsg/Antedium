@@ -22,6 +22,7 @@ class LinkFix(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """Handle messages to check for fixable links."""
         # Ignore if function turned off or message author is a bot
         if message.author.bot or not self.status:
             return
@@ -37,9 +38,18 @@ class LinkFix(commands.Cog):
                 f"If you want to disable these reminders, use the command /remind.")
 
         # Check for potential fixable links
-        handler = await self.find_fixable_links(message)
-        if handler != False:
-            fixed = await self.fix_message(message, handler)
+        handlers = await self.find_fixable_links(message)
+        if len(handlers) != 0:
+            fixed = ""
+            fixed_links = []
+            for handler in handlers:
+                current_fixed = await self.fix_message(message, handler)
+                fixed_links.append(current_fixed)
+            # We read links top down so default message is reversed
+            fixed_links.reverse()
+            for link in fixed_links:
+                link.strip()
+                fixed += link + "\n"
             try:
                 await asyncio.sleep(0.4)
                 await message.edit(suppress=True)
@@ -53,6 +63,7 @@ class LinkFix(commands.Cog):
             
     @commands.Cog.listener()
     async def on_reaction_add(self, reaction, user):
+        """Handle reaction to delete fixed links."""
         if user.bot:
             return
         # If replied to message is by the reaction user, and if the reaction emoji is for deleting
@@ -67,6 +78,10 @@ class LinkFix(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="toggle", with_app_command=True, description="Toggle link fixer.")
     async def toggle(self, ctx):
+        """
+        Toggle the link fixer globally.
+        Useful for toggling partial functionality of the cog.
+        """
         if self.status:
             self.status = False
             await ctx.send("Link fixer disabled globally.")
@@ -77,7 +92,7 @@ class LinkFix(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="user", with_app_command=True, description="Get stats for links fixed for a user.")
     async def user(self, ctx, user: discord.Member = None, user_id: int = None):
-        # Use the logger's get_user_stats method
+        """Get stats for links fixed for a user."""
         target_id = None
         if user:
             target_id = user.id
@@ -94,14 +109,15 @@ class LinkFix(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="server", with_app_command=True, description="Get stats for links fixed in a server.")
     async def server(self, ctx, server_id: int):
-        # Use the logger's get_server_stats method
+        """Get stats for links fixed in a server."""
         total_count = await self.log.get_all_server_stats(server_id)
         await ctx.send(f"{total_count} links fixed in server matching ID {server_id}.")
 
     @commands.is_owner()
     @commands.hybrid_command(name="all", with_app_command=True, description="Get stats for all links fixed.")
     async def all(self, ctx):
-        # Use the logger's get_global_stats method
+        """Get global stats for all links fixed."""
+
         stats = await self.log.get_global_stats()
         embed = discord.Embed(title="Link Fix Stats", color=0x1DA1F2)
         embed.add_field(name="Total Links Fixed", value=stats['total_links_fixed'], inline=False)
@@ -124,15 +140,19 @@ class LinkFix(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.hybrid_command(name="remind", with_app_command=True, description="Toggle ignoring reply reminders.")
-    async def remind(self, ctx):
+    @commands.hybrid_command(name="notifications", with_app_command=True, description="Toggle reply notifications.")
+    async def notifications(self, ctx):
+        """
+        Toggle reply notifications for the user.
+        If the user has notifications enabled, they will receive a DM when someone replies to their fixed link.
+        """
         cur = await self.log.get_ignored(ctx.author.id)
         if cur is False:
             await self.log.add_ignored(ctx.author.id)
-            await ctx.author.send("You will no longer receive reply reminders.")
+            await ctx.author.send("You will no longer receive reply notifications.")
         else:
             await self.log.remove_ignored(ctx.author.id)
-            await ctx.author.send("You will now receive reply reminders.")
+            await ctx.author.send("You will now receive reply notifications.")
 
     async def is_intuitive_reply(self, message):
         # Ignore bot messages
@@ -161,22 +181,47 @@ class LinkFix(commands.Cog):
     async def find_fixable_links(self, message: str):
         """
         Preliminary check for links that may match link handlers.
+
+        Parameters
+        ----------
+        message : str
+            The message content to check for fixable links.
+        
+        Returns
+        -------
+        [LinkInterface]
+        A list of link handlers that can fix the links in the message.
         """
         # Iterate over handlers
+        handlers = []
         for handler in self.linkHandlers:
             # Return False if any handler finds a link to ignore (assumed pre-fixed URL)
             # FIXME: Multiple links in one message may cause issues
-            for link in handler.ignore:
-                if link in message.content:
-                    return False
             # Search for valid links
             for link in handler.replace:
                 if link in message.content:
-                    return handler
-        # False if no valid links found
-        return False
+                    # Only add if link is not prefixed
+                    if not any(x in message.content for x in handler.ignore):
+                        handlers.append(handler)
+        return handlers
 
     async def fix_message(self, message: str, handler: LinkInterface):
+        """
+        Fix the message content by replacing links with the handler's link format.
+        
+        Parameters
+        ----------
+        message : str
+            The message content to fix.
+            
+        handler : LinkInterface
+            The link handler to use for fixing the message.
+            
+        Returns
+        -------
+        str or False
+            The fixed message content with replaced links, or False if no links were fixed.
+        """
         print(message.content)
         new_content = ""
         # Use handler regex to identify links
@@ -245,6 +290,10 @@ async def setup(bot):
     bot.loop.create_task(bg.run())
 
 class BackgroundTimer:
+    """
+    Background task to periodically dump link logger data.
+    This runs every 60 seconds to ensure data is saved.
+    """
     def __init__(self, linkfix):
         self.linkfix = linkfix
         self.bot = linkfix.bot
