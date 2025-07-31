@@ -1,0 +1,11 @@
+/shelf/
+/workspace.xml
+/*/__pycache__/
+/__pycache__/
+config.json
+linklogging/log.json
+*.pyc
+pyc
+config.json
+log.json
+config.json

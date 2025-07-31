@@ -91,13 +91,17 @@ class LinkFix(commands.Cog):
 
     @commands.is_owner()
     @commands.hybrid_command(name="user", with_app_command=True, description="Get stats for links fixed for a user.")
-    async def user(self, ctx, user: discord.Member = None, user_id: int = None):
+    async def user(self, ctx, user: discord.Member = None, user_id: str = None):
         """Get stats for links fixed for a user."""
         target_id = None
         if user:
             target_id = user.id
             display_name = user.display_name
         elif user_id:
+            try:
+                user_id = int(user_id)
+            except ValueError:
+                return await ctx.send("User ID must be a number.")
             target_id = user_id
             display_name = f"User ID {user_id}"
         else:
@@ -108,8 +112,12 @@ class LinkFix(commands.Cog):
 
     @commands.is_owner()
     @commands.hybrid_command(name="server", with_app_command=True, description="Get stats for links fixed in a server.")
-    async def server(self, ctx, server_id: int):
+    async def server(self, ctx, server_id: str):
         """Get stats for links fixed in a server."""
+        try:
+            server_id = int(server_id)
+        except ValueError:
+            return await ctx.send("Server ID must be a number.")
         total_count = await self.log.get_all_server_stats(server_id)
         await ctx.send(f"{total_count} links fixed in server matching ID {server_id}.")
 

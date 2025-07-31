@@ -1,12 +1,16 @@
 import asyncio
 import json
 
+from linkhandlers.instagramlink import InstagramLink
+from linkhandlers.tiktoklink import TiktokLink
+from linkhandlers.twitterlink import TwitterLink
+
 class LinkLogger:
     def __init__(self):
         self.filepath = "linklogging/log.json"
         self.lock = asyncio.Lock()
         self.data = {}
-        self.links = ["twitter", "instagram"]
+        self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink()]
 
     async def load(self):
         """
@@ -124,37 +128,37 @@ class LinkLogger:
             return False
 
     async def get_global_stats(self):
-        """
-        Get aggregated statistics across all link types.
+        """Get global statistics for all links fixed.
         
         Returns
         -------
-        tuple
-            A tuple containing:
-            - A dictionary of server IDs and their total counts.
-            - A dictionary of user IDs and their total counts.
-            - The total number of fixed links across all link types.
-        """
+        dict
+            A dictionary containing the total number of links fixed, top servers, and top users."""
         async with self.lock:
-            # Aggregate stats across all link types
+            total_links_fixed = 0
             server_totals = {}
             user_totals = {}
-            total_fixed = 0
+            for linkName in self.data:
+                if linkName == "ignored":
+                    continue
+                link_data = self.data[linkName]
+                # Add to total links fixed
+                total_links_fixed += link_data.get("links_fixed", 0)
+                # Aggregate server stats
+                for server_id, count in link_data.get("servers", {}).items():
+                    server_totals[server_id] = server_totals.get(server_id, 0) + count
+                # Aggregate user stats
+                for user_id, count in link_data.get("users", {}).items():
+                    user_totals[user_id] = user_totals.get(user_id, 0) + count
 
-            for linkName in self.links:
-                # Servers
-                for serverID, count in self.data[linkName]["servers"].items():
-                    server_totals[serverID] = server_totals.get(serverID, 0) + count
-                # Users
-                for userID, count in self.data[linkName]["users"].items():
-                    user_totals[userID] = user_totals.get(userID, 0) + count
-                # Total fixed
-                total_fixed += self.data[linkName]["links_fixed"]
+            top_servers = sorted(server_totals.items(), key=lambda x: x[1], reverse=True)
+            top_users = sorted(user_totals.items(), key=lambda x: x[1], reverse=True)
 
-            sorted_servers = dict(sorted(server_totals.items(), key=lambda item: item[1], reverse=True))
-            sorted_users = dict(sorted(user_totals.items(), key=lambda item: item[1], reverse=True))
-
-            return sorted_servers, sorted_users, total_fixed
+            return {
+                'total_links_fixed': total_links_fixed,
+                'top_servers': top_servers,
+                'top_users': top_users
+            }
 
     async def get_all_server_stats(self, serverID):
         """
@@ -170,7 +174,8 @@ class LinkLogger:
             The total number of entries for the server across all link types.
         """
         count = 0
-        for linkName in self.links:
+        for handler in self.linkHandlers:
+            linkName = handler.name
             serverID = str(serverID)
             async with self.lock:
                 if serverID not in self.data[linkName]["servers"]:
@@ -193,7 +198,8 @@ class LinkLogger:
             The total number of entries for the user across all link types.
         """
         count = 0
-        for linkName in self.links:
+        for handler in self.linkHandlers:
+            linkName = handler.name
             userID = str(userID)
             async with self.lock:
                 if userID not in self.data[linkName]["users"]:
