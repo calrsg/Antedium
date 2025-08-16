@@ -9,3 +9,5 @@ pyc
 config.json
 log.json
 config.json
+Antedium.code-workspace
+*.code-workspace
