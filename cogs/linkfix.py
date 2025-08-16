@@ -118,34 +118,109 @@ class LinkFix(commands.Cog):
             server_id = int(server_id)
         except ValueError:
             return await ctx.send("Server ID must be a number.")
+        
+        # Try to get server name
+        server = self.bot.get_guild(server_id)
+        server_name = server.name if server else f"Unknown Server"
+        
         total_count = await self.log.get_all_server_stats(server_id)
-        await ctx.send(f"{total_count} links fixed in server matching ID {server_id}.")
+        await ctx.send(f"{total_count} links fixed in {server_name}.")
 
     @commands.is_owner()
     @commands.hybrid_command(name="all", with_app_command=True, description="Get stats for all links fixed.")
     async def all(self, ctx):
         """Get global stats for all links fixed."""
+        await ctx.defer()
 
         stats = await self.log.get_global_stats()
-        embed = discord.Embed(title="Link Fix Stats", color=0x1DA1F2)
-        embed.add_field(name="Total Links Fixed", value=stats['total_links_fixed'], inline=False)
+        embed = discord.Embed(title="Link Stats", color=0x1DA1F2)
+        embed.add_field(name="Total Links", value=stats.get('total_links_fixed', 0), inline=False)
 
         # Show top servers
         top_servers = stats.get('top_servers', [])[:5]
+        server_list = []
+        for sid, count in top_servers:
+            try:
+                server_id = int(sid) if isinstance(sid, str) else sid
+                
+                # More thorough guild search
+                server = None
+                for guild in self.bot.guilds:
+                    if guild.id == server_id:
+                        server = guild
+                        break
+                
+                if server:
+                    server_name = server.name
+                else:
+                    server_name = f"Unknown Server"
+                server_list.append(f"{count} : {server_name}")
+            except (ValueError, TypeError):
+                server_list.append(f"{count} : Invalid Server")
+        
         embed.add_field(
-            name="Top Servers Fixed",
-            value="\n".join([f"{count} : Server ID {sid}" for sid, count in top_servers]) or "None",
+            name="Top Servers",
+            value="\n".join(server_list) or "None",
             inline=False
         )
 
         # Show top users
         top_users = stats.get('top_users', [])[:5]
+        user_list = []
+        for uid, count in top_users:
+            try:
+                user_id = int(uid) if isinstance(uid, str) else uid
+                
+                # First try bot's user cache
+                user = self.bot.get_user(user_id)
+                if user:
+                    user_name = f"{user.display_name} (@{user.name})"
+                else:
+                    # Search through all guild members
+                    found_member = None
+                    for guild in self.bot.guilds:
+                        member = guild.get_member(user_id)
+                        if member:
+                            found_member = member
+                            break
+                    
+                    if found_member:
+                        user_name = f"{found_member.display_name} (@{found_member.name})"
+                    else:
+                        user_name = f"User Not Found (ID: {user_id})"
+                
+                user_list.append(f"{count} : {user_name}")
+            except (ValueError, TypeError):
+                user_list.append(f"{count} : Invalid User ID ({uid})")
+        
         embed.add_field(
-            name="Top Users Fixed",
-            value="\n".join([f"{count} : User ID {uid}" for uid, count in top_users]) or "None",
+            name="Top Users",
+            value="\n".join(user_list) or "None",
             inline=False
         )
 
+        await ctx.send(embed=embed)
+
+    @commands.is_owner()
+    @commands.hybrid_command(name="debug_guilds", with_app_command=True, description="Debug guild access.")
+    async def debug_guilds(self, ctx):
+        """Debug command to check guild access."""
+        await ctx.defer()
+        
+        guild_count = len(self.bot.guilds)
+        guild_names = [f"{guild.name} (ID: {guild.id})" for guild in self.bot.guilds[:10]]
+        
+        embed = discord.Embed(title="Guild Debug Info", color=0x00ff00)
+        embed.add_field(name="Total Guilds", value=guild_count, inline=False)
+        embed.add_field(name="Total Users in Cache", value=len(self.bot.users), inline=False)
+        embed.add_field(name="First 10 Guilds", value="\n".join(guild_names) if guild_names else "None", inline=False)
+        
+        # Show some stats data for comparison
+        stats = await self.log.get_global_stats()
+        top_servers = stats.get('top_servers', [])[:3]
+        server_ids = [str(sid) for sid, count in top_servers]
+        embed.add_field(name="Top Server IDs from Stats", value=", ".join(server_ids) if server_ids else "None", inline=False)
+        
         await ctx.send(embed=embed)
 
     @commands.hybrid_command(name="notifications", with_app_command=True, description="Toggle reply notifications.")
@@ -163,6 +238,18 @@ class LinkFix(commands.Cog):
             await ctx.author.send("You will now receive reply notifications.")
 
     async def is_intuitive_reply(self, message):
+        """
+        Check if the message is a reply to a bot's fixed link message.
+        
+        Parameters
+        ----------
+        message : discord.Message
+            The message to check for a reply.
+        
+        Returns
+        -------
+        discord.User or False
+            The user who should receive the reply notification, or False if no notification is needed."""
         # Ignore bot messages
         if message.author.bot:
             return False
@@ -241,7 +328,6 @@ class LinkFix(commands.Cog):
             # Check if the selected URL has spoiler tags
             spoiler = await spoiler_check(message.content)
             # Rebuild the URL from the regex match
-            # FIXME: This probably breaks with diff formats eg. Insta TikTok
             new_url = ""
             for i in url:
                 print(i)
