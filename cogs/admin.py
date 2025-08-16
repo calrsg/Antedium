@@ -10,6 +10,14 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="load", with_app_command=True, description="Load a cog.")
     async def load(self, ctx, extension):
+        """
+        Load a cog.
+
+        Parameters
+        ----------
+        extension: str
+            The name of the cog to load.
+        """
         # awful fix for errors with unknown filenames
         load_success = False
         for filename in os.listdir("./cogs"):
@@ -23,6 +31,14 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="unload", with_app_command=True, description="Unload a cog")
     async def unload(self, ctx, extension):
+        """
+        Unload a cog.
+
+        Parameters
+        ----------
+        extension: str
+            The name of the cog to unload.
+        """
         # awful fix for errors with unknown filenames
         unload_success = False
         for filename in os.listdir("./cogs"):
@@ -39,6 +55,14 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="reload", with_app_command=True, description="Reload a cog.")
     async def reload(self, ctx, extension):
+        """
+        Reload a cog.
+
+        Parameters
+        ----------
+        extension: str
+            The name of the cog to reload.
+        """
         # awful fix for errors with unknown filenames
         reload_success = False
         for filename in os.listdir("./cogs"):
@@ -53,12 +77,22 @@ class Admin(commands.Cog):
     @commands.is_owner()
     @commands.hybrid_command(name="listcogs", with_app_command=True, description="List all cogs in the cogs folder.")
     async def listcogs(self, ctx):
+        """
+        List all cogs in the cogs folder.
+        """
         cogs = []
         for filename in os.listdir("./cogs"):
             if filename.endswith(".py"):
                 cogs.append(filename)
         await ctx.send(f"Found the following cogs: {str(cogs)[1:-1]}")
 
+    @commands.is_owner()
+    @commands.hybrid_command(name="countservers", with_app_command=True, description="Count the number of servers the bot is in.")
+    async def countservers(self, ctx):
+        """
+        Count the number of servers the bot is in.
+        """
+        await ctx.send(f"Servers: {len(self.bot.guilds)}")
 
 async def setup(bot):
     # take name of class, pass in the bot

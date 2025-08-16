@@ -3,13 +3,15 @@ from discord.ext import commands
 import os
 import json
 
-dev = True
-
-class Galassist(commands.Bot):
+class Core(commands.Bot):
 
     intents = discord.Intents.default()
 
-    bot = commands.Bot(command_prefix="!", intents=intents)
+    intents.message_content = True
+    intents.members = False
+    intents.presences = False
+
+    member_cache_flags = discord.MemberCacheFlags.none()
 
     def __init__(self):
         self.discord_bot_token = ""
@@ -19,23 +21,39 @@ class Galassist(commands.Bot):
 
         owners = [73389450113069056]
         super().__init__(command_prefix=self.discord_command_prefixes, case_insensitive=True,
-                         intents=discord.Intents.all(), owner_ids=set(owners), allowed_mentions=allowed_mentions)
+                         intents=self.intents, owner_ids=set(owners), allowed_mentions=allowed_mentions, 
+                         member_cache_flags=self.member_cache_flags, chunk_guilds_at_startup=False, max_messages=1000)
 
     def load_config(self):
-        with open("config.json") as file:
-            contents = json.loads(file.read())
-            if dev is True:
-                self.discord_bot_token = contents['discord']['dev_bot_token']
-            else:
-                self.discord_bot_token = contents['discord']['bot_token']
-            self.discord_command_prefixes = contents['discord']['command_prefixes']
-            file.close()
+        try:
+            with open("config.json") as file:
+                contents = json.loads(file.read())
+                dev = contents['dev']
+                if dev:
+                    self.discord_bot_token = contents['discord']['dev_bot_token']
+                else:
+                    self.discord_bot_token = contents['discord']['bot_token']
+                self.discord_command_prefixes = contents['discord']['command_prefixes']
+                file.close()
+                print("config loaded successfully.")
+        except FileNotFoundError:
+            with open("config.json", "w") as file:
+                default_config = {
+                    "discord": {
+                        "dev_bot_token": "",
+                        "bot_token": "",
+                        "command_prefixes": ["!"]
+                    },
+                    "dev": True
+                }
+                json.dump(default_config, file, indent=4)
+            print("config.json not found. A default config file has been created. Please fill in the bot_token field.")
+            exit(1)
 
-    @bot.event
     async def on_ready(self):
         print("Bot initialised.")
         await self.startup()
-        await self.change_presence(activity=discord.Game(name=f"Fixing embeds..."))
+        await self.change_presence(activity=discord.Game(name=f"Tidying up 🧹"))
 
     async def startup(self):
         print("Attempting to load cogs...")
@@ -48,53 +66,12 @@ class Galassist(commands.Bot):
         print("All cogs parsed.")
         await self.tree.sync()
 
-    # @bot.event
-    # async def on_command_error(self, ctx, error):
-    #     if isinstance(error, commands.MissingRequiredArgument):
-    #         await ctx.send("Missing argument.")
-    #         print(error)
-    #     if isinstance(error, commands.CommandNotFound):
-    #         print(error)
-    #         return
-    #     if isinstance(error, commands.PrivateMessageOnly):
-    #         print(error)
-    #         await ctx.send("This command is for DM's only.")
-    #     if isinstance(error, commands.NotOwner):
-    #         print(error)
-    #         await ctx.send("Bot author command only.")
-    #     if isinstance(error, commands.UserNotFound):
-    #         print(error)
-    #         await ctx.send("Specified user not found.")
-    #     if isinstance(error, commands.MemberNotFound):
-    #         print(error)
-    #         await ctx.send("Specified member not found.")
-    #     if isinstance(error, commands.MessageNotFound):
-    #         print(error)
-    #         await ctx.send("Specified message not found.")
-    #     if isinstance(error, commands.ChannelNotFound):
-    #         print(error)
-    #         await ctx.send("Specified channel not found.")
-    #     if isinstance(error, commands.MissingAnyRole):
-    #         print(error)
-    #         await ctx.send("You do not have the role required for this command.")
-    #     if isinstance(error, commands.MissingPermissions):
-    #         print(error)
-    #         await ctx.send("You do not have permission for this command")
-    #     if isinstance(error, commands.BotMissingRole):
-    #         print(error)
-    #         await ctx.send("I do not have the role required for this command.")
-    #     if isinstance(error, commands.BotMissingPermissions):
-    #         print(error)
-    #         await ctx.send("I do not have permission for this command")
-    #     else:
-    #         print(error)
-
     def run(self):
         super().run(self.discord_bot_token)
 
 
 if __name__ == "__main__":
-    galassist = Galassist()
-    galassist.run()
+    core = Core()
+    core.run()
 
 
