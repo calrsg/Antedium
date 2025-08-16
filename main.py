@@ -3,8 +3,6 @@ from discord.ext import commands
 import os
 import json
 
-dev = True
-
 class Core(commands.Bot):
 
     intents = discord.Intents.default()
@@ -29,7 +27,8 @@ class Core(commands.Bot):
     def load_config(self):
         with open("config.json") as file:
             contents = json.loads(file.read())
-            if dev is True:
+            dev = contents['discord']['dev']
+            if dev:
                 self.discord_bot_token = contents['discord']['dev_bot_token']
             else:
                 self.discord_bot_token = contents['discord']['bot_token']
