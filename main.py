@@ -9,7 +9,11 @@ class Core(commands.Bot):
 
     intents = discord.Intents.default()
 
-    bot = commands.Bot(command_prefix="!", intents=intents)
+    intents.message_content = True
+    intents.members = False
+    intents.presences = False
+
+    member_cache_flags = discord.MemberCacheFlags.none()
 
     def __init__(self):
         self.discord_bot_token = ""
@@ -19,7 +23,8 @@ class Core(commands.Bot):
 
         owners = [73389450113069056]
         super().__init__(command_prefix=self.discord_command_prefixes, case_insensitive=True,
-                         intents=discord.Intents.all(), owner_ids=set(owners), allowed_mentions=allowed_mentions)
+                         intents=self.intents, owner_ids=set(owners), allowed_mentions=allowed_mentions, 
+                         member_cache_flags=self.member_cache_flags, chunk_guilds_at_startup=False, max_messages=1000)
 
     def load_config(self):
         with open("config.json") as file:
@@ -31,11 +36,10 @@ class Core(commands.Bot):
             self.discord_command_prefixes = contents['discord']['command_prefixes']
             file.close()
 
-    @bot.event
     async def on_ready(self):
         print("Bot initialised.")
         await self.startup()
-        await self.change_presence(activity=discord.Game(name=f"http://bot.glky.net"))
+        await self.change_presence(activity=discord.Game(name=f"Tidying up 🧹"))
 
     async def startup(self):
         print("Attempting to load cogs...")
@@ -53,7 +57,7 @@ class Core(commands.Bot):
 
 
 if __name__ == "__main__":
-    galassist = Core()
-    galassist.run()
+    core = Core()
+    core.run()
 
 
