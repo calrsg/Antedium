@@ -17,8 +17,18 @@ class LinkLogger:
         Load the logger data from the JSON file.
         """
         async with self.lock:
-            with open(self.filepath, "r") as f:
-                self.data = json.load(f)
+            try:
+                with open(self.filepath, "r") as f:
+                    self.data = json.load(f)
+                print("Log loaded successfully.")
+            except FileNotFoundError:
+                self.data = {
+                    handler.name: {"users": {}, "servers": {}, "links_fixed": 0} for handler in self.linkHandlers
+                }
+                self.data["ignored"] = {}
+                with open(self.filepath, "w") as f:
+                    json.dump(self.data, f, indent=4)
+                print("Log file was not found, expected 'linklogging/log.json'. A new log file has been created. If this is the first time running, ignore this message.")
 
     async def dump(self):
         """

@@ -25,15 +25,30 @@ class Core(commands.Bot):
                          member_cache_flags=self.member_cache_flags, chunk_guilds_at_startup=False, max_messages=1000)
 
     def load_config(self):
-        with open("config.json") as file:
-            contents = json.loads(file.read())
-            dev = contents['dev']
-            if dev:
-                self.discord_bot_token = contents['discord']['dev_bot_token']
-            else:
-                self.discord_bot_token = contents['discord']['bot_token']
-            self.discord_command_prefixes = contents['discord']['command_prefixes']
-            file.close()
+        try:
+            with open("config.json") as file:
+                contents = json.loads(file.read())
+                dev = contents['dev']
+                if dev:
+                    self.discord_bot_token = contents['discord']['dev_bot_token']
+                else:
+                    self.discord_bot_token = contents['discord']['bot_token']
+                self.discord_command_prefixes = contents['discord']['command_prefixes']
+                file.close()
+                print("config loaded successfully.")
+        except FileNotFoundError:
+            with open("config.json", "w") as file:
+                default_config = {
+                    "discord": {
+                        "dev_bot_token": "",
+                        "bot_token": "",
+                        "command_prefixes": ["!"]
+                    },
+                    "dev": True
+                }
+                json.dump(default_config, file, indent=4)
+            print("config.json not found. A default config file has been created. Please fill in the bot_token field.")
+            exit(1)
 
     async def on_ready(self):
         print("Bot initialised.")
