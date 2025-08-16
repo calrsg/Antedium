@@ -201,28 +201,6 @@ class LinkFix(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.is_owner()
-    @commands.hybrid_command(name="debug_guilds", with_app_command=True, description="Debug guild access.")
-    async def debug_guilds(self, ctx):
-        """Debug command to check guild access."""
-        await ctx.defer()
-        
-        guild_count = len(self.bot.guilds)
-        guild_names = [f"{guild.name} (ID: {guild.id})" for guild in self.bot.guilds[:10]]
-        
-        embed = discord.Embed(title="Guild Debug Info", color=0x00ff00)
-        embed.add_field(name="Total Guilds", value=guild_count, inline=False)
-        embed.add_field(name="Total Users in Cache", value=len(self.bot.users), inline=False)
-        embed.add_field(name="First 10 Guilds", value="\n".join(guild_names) if guild_names else "None", inline=False)
-        
-        # Show some stats data for comparison
-        stats = await self.log.get_global_stats()
-        top_servers = stats.get('top_servers', [])[:3]
-        server_ids = [str(sid) for sid, count in top_servers]
-        embed.add_field(name="Top Server IDs from Stats", value=", ".join(server_ids) if server_ids else "None", inline=False)
-        
-        await ctx.send(embed=embed)
-
     @commands.hybrid_command(name="notifications", with_app_command=True, description="Toggle reply notifications.")
     async def notifications(self, ctx):
         """
