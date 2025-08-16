@@ -10,7 +10,7 @@ class Core(commands.Bot):
     # Required intents
     intents.message_content = True  # Needed to read message content for link detection
     intents.guilds = True  # Needed for server stats and guild info
-    intents.members = True # Needed for user stats
+    intents.members = False
     
     # Disabled to avoid performance degredation in large servers
     intents.presences = False 

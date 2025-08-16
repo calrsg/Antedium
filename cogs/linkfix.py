@@ -14,11 +14,13 @@ class LinkFix(commands.Cog):
         self.bot = bot
         self.status = True
         self.log = LinkLogger()
+        self.user_cache = {}  # New user cache dictionary
         self.bot.loop.create_task(self.init_log())
         self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink()]
 
     async def init_log(self):
         await self.log.load()
+        await self.cache_users()
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -142,18 +144,8 @@ class LinkFix(commands.Cog):
         for sid, count in top_servers:
             try:
                 server_id = int(sid) if isinstance(sid, str) else sid
-                
-                # More thorough guild search
-                server = None
-                for guild in self.bot.guilds:
-                    if guild.id == server_id:
-                        server = guild
-                        break
-                
-                if server:
-                    server_name = server.name
-                else:
-                    server_name = f"Unknown Server"
+                server = self.bot.get_guild(server_id)
+                server_name = server.name if server else f"Unknown Server"
                 server_list.append(f"{count} : {server_name}")
             except (ValueError, TypeError):
                 server_list.append(f"{count} : Invalid Server")
@@ -164,31 +156,30 @@ class LinkFix(commands.Cog):
             inline=False
         )
 
-        # Show top users
+        # Show top users using the cache
         top_users = stats.get('top_users', [])[:5]
         user_list = []
         for uid, count in top_users:
             try:
                 user_id = int(uid) if isinstance(uid, str) else uid
                 
-                # First try bot's user cache
-                user = self.bot.get_user(user_id)
-                if user:
-                    user_name = f"{user.display_name} (@{user.name})"
+                # Use the user cache
+                if user_id in self.user_cache:
+                    user_info = self.user_cache[user_id]
+                    user_name = f"{user_info['display_name']} (@{user_info['name']})"
                 else:
-                    # Search through all guild members
-                    found_member = None
-                    for guild in self.bot.guilds:
-                        member = guild.get_member(user_id)
-                        if member:
-                            found_member = member
-                            break
-                    
-                    if found_member:
-                        user_name = f"{found_member.display_name} (@{found_member.name})"
-                    else:
-                        user_name = f"User Not Found (ID: {user_id})"
-                
+                    # If not in cache, try to fetch directly
+                    try:
+                        user = await self.bot.fetch_user(user_id)
+                        user_name = f"{user.display_name} (@{user.name})"
+                        # Add to cache for future use
+                        self.user_cache[user_id] = {
+                            "display_name": user.display_name,
+                            "name": user.name
+                        }
+                    except:
+                        user_name = f"User ID: {user_id}"
+            
                 user_list.append(f"{count} : {user_name}")
             except (ValueError, TypeError):
                 user_list.append(f"{count} : Invalid User ID ({uid})")
@@ -334,6 +325,40 @@ class LinkFix(commands.Cog):
             return new_content
         
         return False
+
+    async def cache_users(self):
+        """Cache users from the log data."""
+        print("Caching users from log data...")
+        # Get all unique user IDs from the log data
+        user_ids = set()
+        for handler_name in [handler.name for handler in self.linkHandlers]:
+            if handler_name in self.log.data:
+                users = self.log.data[handler_name].get("users", {})
+                user_ids.update(users.keys())
+    
+        # Fetch user information for each ID
+        cached_count = 0
+        for user_id in user_ids:
+            try:
+                user_id = int(user_id)
+                # Try to fetch user (works without members intent)
+                try:
+                    user = await self.bot.fetch_user(user_id)
+                    self.user_cache[user_id] = {
+                        "display_name": user.display_name,
+                        "name": user.name
+                    }
+                    cached_count += 1
+                except discord.NotFound:
+                    # User not found, add a placeholder
+                    self.user_cache[user_id] = {
+                        "display_name": f"Unknown User",
+                        "name": f"{user_id}"
+                    }
+            except Exception as e:
+                print(f"Error caching user {user_id}: {e}")
+    
+        print(f"Successfully cached {cached_count} users.")
 
 async def spoiler_check(message):
     """
