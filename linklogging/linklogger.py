@@ -145,15 +145,13 @@ class LinkLogger:
         dict
             A dictionary containing the total number of links fixed, top servers, and top users."""
         async with self.lock:
-            total_links_fixed = 0
+            total_links_fixed = await self.get_total_fixed()
             server_totals = {}
             user_totals = {}
             for linkName in self.data:
                 if linkName == "ignored":
                     continue
                 link_data = self.data[linkName]
-                # Add to total links fixed
-                total_links_fixed += link_data.get("links_fixed", 0)
                 # Aggregate server stats
                 for server_id, count in link_data.get("servers", {}).items():
                     server_totals[server_id] = server_totals.get(server_id, 0) + count
@@ -217,6 +215,22 @@ class LinkLogger:
                 else:
                     count += self.data[linkName]["users"][userID]
         return count
+    
+    async def get_total_fixed(self):
+        """
+        Get the total number of links fixed across all users and servers.
+
+        Returns
+        -------
+        int
+            The total number of links fixed.
+        """
+        total = 0
+        for handler in self.linkHandlers:
+            linkName = handler.name
+            async with self.lock:
+                total += self.data[linkName]['links_fixed']
+        return total
 
     async def get_ignored(self, userID):
         """

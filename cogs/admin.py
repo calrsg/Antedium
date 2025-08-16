@@ -94,6 +94,34 @@ class Admin(commands.Cog):
         """
         await ctx.send(f"Servers: {len(self.bot.guilds)}")
 
+    @commands.is_owner()
+    @commands.hybrid_command(name="setstatus", with_app_command=True, description="Set the bot's status.")
+    async def setstatus(self, ctx, *, status: str):
+        """
+        Set the bot's status.
+
+        Parameters
+        ----------
+        status: str
+            The new status for the bot, must be 128 characters or less.
+        """
+        # 128 current max length for status
+        if len(status) > 128:
+            await ctx.send("Status is too long, must be 128 characters or less.", ephemeral=True)
+            return
+
+        await self.bot.set_status(status)
+        await ctx.send(f"Status set to '{status}'", ephemeral=True)
+
+    @commands.is_owner()
+    @commands.hybrid_command(name="statuscount", with_app_command=True, description="Toggle the bot's status to display the total links fixed.")
+    async def statuscount(self, ctx):
+        """
+        Toggle if the bot's status displays the total fixed links
+        """
+        self.bot.status_count = not self.bot.status_count
+        self.bot.set_status_count(self.bot.status_count)
+        await ctx.send(f"{'Enabled' if self.bot.status_count else 'Disabled'}.", ephemeral=True)
+
 async def setup(bot):
-    # take name of class, pass in the bot
     await bot.add_cog(Admin(bot))
