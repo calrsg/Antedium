@@ -363,8 +363,7 @@ async def setup(bot):
 
 class BackgroundTimer:
     """
-    Background task to periodically dump link logger data.
-    This runs every 60 seconds to ensure data is saved.
+    Background task to periodically dump link logger data and update the bot's status.
     """
     def __init__(self, linkfix):
         self.linkfix = linkfix
@@ -372,6 +371,11 @@ class BackgroundTimer:
 
     async def run(self):
         while True:
-            await asyncio.sleep(60)
+            await asyncio.sleep(self.bot.log_timer)
+
+            if self.bot.status_count:
+                await self.bot.change_presence(activity=discord.Game(name=f"{await self.linkfix.log.get_total_fixed()} fixed embeds"))
+                
             await self.linkfix.log.dump()
+
 
