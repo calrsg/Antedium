@@ -120,7 +120,7 @@ class Admin(commands.Cog):
         Toggle if the bot's status displays the total fixed links
         """
         self.bot.status_count = not self.bot.status_count
-        self.bot.set_status_count(self.bot.status_count)
+        await self.bot.set_status_count(self.bot.status_count)
         await ctx.send(f"{'Enabled' if self.bot.status_count else 'Disabled'}.", ephemeral=True)
 
 async def setup(bot):

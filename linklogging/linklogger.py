@@ -138,35 +138,37 @@ class LinkLogger:
             return False
 
     async def get_global_stats(self):
-        """Get global statistics for all links fixed.
-        
-        Returns
-        -------
-        dict
-            A dictionary containing the total number of links fixed, top servers, and top users."""
+        """Get global statistics for all links fixed."""
         async with self.lock:
-            total_links_fixed = await self.get_total_fixed()
-            server_totals = {}
-            user_totals = {}
-            for linkName in self.data:
-                if linkName == "ignored":
-                    continue
-                link_data = self.data[linkName]
-                # Aggregate server stats
-                for server_id, count in link_data.get("servers", {}).items():
-                    server_totals[server_id] = server_totals.get(server_id, 0) + count
-                # Aggregate user stats
-                for user_id, count in link_data.get("users", {}).items():
-                    user_totals[user_id] = user_totals.get(user_id, 0) + count
+            # Make a copy of the data while holding the lock
+            data_snapshot = self.data.copy()
+        
+        # Calculate statistics using the snapshot (outside the lock)
+        server_totals = {}
+        user_totals = {}
+        total_links_fixed = 0
+        
+        for linkName in data_snapshot:
+            if linkName == "ignored":
+                continue
+            link_data = data_snapshot[linkName]
+            # Add to total links fixed
+            total_links_fixed += link_data.get('links_fixed', 0)
+            # Aggregate server stats
+            for server_id, count in link_data.get("servers", {}).items():
+                server_totals[server_id] = server_totals.get(server_id, 0) + count
+            # Aggregate user stats
+            for user_id, count in link_data.get("users", {}).items():
+                user_totals[user_id] = user_totals.get(user_id, 0) + count
 
-            top_servers = sorted(server_totals.items(), key=lambda x: x[1], reverse=True)
-            top_users = sorted(user_totals.items(), key=lambda x: x[1], reverse=True)
+        top_servers = sorted(server_totals.items(), key=lambda x: x[1], reverse=True)
+        top_users = sorted(user_totals.items(), key=lambda x: x[1], reverse=True)
 
-            return {
-                'total_links_fixed': total_links_fixed,
-                'top_servers': top_servers,
-                'top_users': top_users
-            }
+        return {
+            'total_links_fixed': total_links_fixed,
+            'top_servers': top_servers,
+            'top_users': top_users
+        }
 
     async def get_all_server_stats(self, serverID):
         """

@@ -7,11 +7,20 @@ class Core(commands.Bot):
 
     intents = discord.Intents.default()
 
-    intents.message_content = True
-    intents.members = False
-    intents.presences = False
+    # Required intents
+    intents.message_content = True  # Needed to read message content for link detection
+    intents.guilds = True  # Needed for server stats and guild info
+    intents.members = True # Needed for user stats
+    
+    # Disabled to avoid performance degredation in large servers
+    intents.presences = False 
+    intents.typing = False
+    intents.voice_states = False
+    intents.webhooks = False
+    intents.integrations = False
+    intents.invites = False 
 
-    member_cache_flags = discord.MemberCacheFlags.none()
+    member_cache_flags = discord.MemberCacheFlags.from_intents(intents)
 
     def __init__(self):
         self.discord_bot_token = ""
@@ -25,7 +34,7 @@ class Core(commands.Bot):
         owners = [73389450113069056]
         super().__init__(command_prefix=self.discord_command_prefixes, case_insensitive=True,
                          intents=self.intents, owner_ids=set(owners), allowed_mentions=allowed_mentions, 
-                         member_cache_flags=self.member_cache_flags, chunk_guilds_at_startup=False, max_messages=1000)
+                         member_cache_flags=self.member_cache_flags, max_messages=1000)
 
     def load_config(self):
         try:
