@@ -27,7 +27,7 @@ class Core(commands.Bot):
     def load_config(self):
         with open("config.json") as file:
             contents = json.loads(file.read())
-            dev = contents['discord']['dev']
+            dev = contents['dev']
             if dev:
                 self.discord_bot_token = contents['discord']['dev_bot_token']
             else:
