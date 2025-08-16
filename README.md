@@ -10,11 +10,11 @@ Antedium is a Discord chat bot designed to remove tedious tasks caused by the ar
 
 ## Installation
 
-1) Download the codebase as a .zip file.
-2) Extract the contents to a location you'd like the bot to run.
+1) Download the codebase as a .zip file
+2) Extract the contents to a location you'd like the bot to run
 3) Create a Python venv inside of the new folder (use google for this c: )
-4) Run main.py, which will generate a config.json file and immediately close.
-5) Enter your Discord bot token into the config.json file as bot_token.
+4) Run main.py, which will generate a config.json file and immediately close
+5) Enter your Discord bot token into the config.json file as bot_token
 6) Run the bot again, which will now generate a log.json file
 
 ## Permissions
