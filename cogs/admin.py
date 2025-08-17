@@ -8,7 +8,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.is_owner()
-    @commands.hybrid_command(name="load", with_app_command=True, description="Load a cog.")
+    @commands.command(name="load", description="Load a cog.")
     async def load(self, ctx, extension):
         """
         Load a cog.
@@ -29,7 +29,7 @@ class Admin(commands.Cog):
             await ctx.send(f"**{extension}** has *not* been loaded, please check cog name.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="unload", with_app_command=True, description="Unload a cog")
+    @commands.command(name="unload", description="Unload a cog")
     async def unload(self, ctx, extension):
         """
         Unload a cog.
@@ -53,7 +53,7 @@ class Admin(commands.Cog):
             await ctx.send(f"**{extension}** has *not* been unloaded, please check cog name.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="reload", with_app_command=True, description="Reload a cog.")
+    @commands.command(name="reload", description="Reload a cog.")
     async def reload(self, ctx, extension):
         """
         Reload a cog.
@@ -75,7 +75,7 @@ class Admin(commands.Cog):
             await ctx.send(f"**{extension}** has *not* been reloaded, please check cog name.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="listcogs", with_app_command=True, description="List all cogs in the cogs folder.")
+    @commands.command(name="listcogs", description="List all cogs in the cogs folder.")
     async def listcogs(self, ctx):
         """
         List all cogs in the cogs folder.
@@ -87,7 +87,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Found the following cogs: {str(cogs)[1:-1]}")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="countservers", with_app_command=True, description="Count the number of servers the bot is in.")
+    @commands.command(name="countservers", description="Count the number of servers the bot is in.")
     async def countservers(self, ctx):
         """
         Count the number of servers the bot is in.
@@ -95,7 +95,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Servers: {len(self.bot.guilds)}")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="setstatus", with_app_command=True, description="Set the bot's status.")
+    @commands.command(name="setstatus", description="Set the bot's status.")
     async def setstatus(self, ctx, *, status: str):
         """
         Set the bot's status.
@@ -114,7 +114,7 @@ class Admin(commands.Cog):
         await ctx.send(f"Status set to '{status}'", ephemeral=True)
 
     @commands.is_owner()
-    @commands.hybrid_command(name="statuscount", with_app_command=True, description="Toggle the bot's status to display the total links fixed.")
+    @commands.command(name="statuscount", description="Toggle the bot's status to display the total links fixed.")
     async def statuscount(self, ctx):
         """
         Toggle if the bot's status displays the total fixed links

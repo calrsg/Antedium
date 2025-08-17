@@ -78,7 +78,7 @@ class LinkFix(commands.Cog):
             await user.send(f"You deleted a link I fixed in {reaction.message.guild.name}.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="toggle", with_app_command=True, description="Toggle link fixer.")
+    @commands.command(name="toggle", description="Toggle link fixer.")
     async def toggle(self, ctx):
         """
         Toggle the link fixer globally.
@@ -92,7 +92,7 @@ class LinkFix(commands.Cog):
             await ctx.send("Link fixer enabled globally.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="user", with_app_command=True, description="Get stats for links fixed for a user.")
+    @commands.command(name="user", description="Get stats for links fixed for a user.")
     async def user(self, ctx, user: discord.Member = None, user_id: str = None):
         """Get stats for links fixed for a user."""
         target_id = None
@@ -113,7 +113,7 @@ class LinkFix(commands.Cog):
         await ctx.send(f"{total_count} links fixed for {display_name}.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="server", with_app_command=True, description="Get stats for links fixed in a server.")
+    @commands.command(name="server", description="Get stats for links fixed in a server.")
     async def server(self, ctx, server_id: str):
         """Get stats for links fixed in a server."""
         try:
@@ -129,7 +129,7 @@ class LinkFix(commands.Cog):
         await ctx.send(f"{total_count} links fixed in {server_name}.")
 
     @commands.is_owner()
-    @commands.hybrid_command(name="all", with_app_command=True, description="Get stats for all links fixed.")
+    @commands.command(name="all", description="Get stats for all links fixed.")
     async def all(self, ctx):
         """Get global stats for all links fixed."""
         await ctx.defer()
