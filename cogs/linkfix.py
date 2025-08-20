@@ -36,8 +36,7 @@ class LinkFix(commands.Cog):
         else:
             await intuitive_reply.send(
                 f"{message.author.display_name} replied to your link in {message.guild.name}: "
-                f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}\n"
-                f"If you want to disable these reminders, use the command /remind.")
+                f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}\n")
 
         # Check for potential fixable links
         handlers = await self.find_fixable_links(message)
