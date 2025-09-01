@@ -54,4 +54,4 @@ The easiest way to contribute is through adding link handlers, which are used to
 
 ## Licence
 
-This software is licensed under the [GNU General Public Licence 3.0](LICENCE) licence.
+This software is licensed under the GNU General Public Licence 3.0 licence.
