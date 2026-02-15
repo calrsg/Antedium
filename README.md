@@ -8,6 +8,10 @@
 
 Antedium is a Discord chat bot designed to remove tedious tasks caused by the arguably bloated platform, removing the need for users to do things such as fix popular social media links that don't embed properly by default.
 
+## Public Bot
+
+To avoid setting up this bot locally, I host an instance that can be invited to your server using [this invite link](http://bot.glky.net). Alternatively, you can search for 'Antedium' on Discord's list of Verified bots and invite it directly through the client.
+
 ## Installation
 
 1) Download the codebase as a .zip file
@@ -27,10 +31,6 @@ Antedium requires the following permissions on a per server basis:
 
 Antedium requires the following permissions on a bot level:
 - Privileged message content intent (reading all new messages)
-
-## Public Bot
-
-To avoid setting up this bot locally, I host an instance that can be invited to your server using [this invite link](http://bot.glky.net). Alternatively, you can search for 'Antedium' on Discord's list of Verified bots and invite it directly through the client.
 
 ## Usage
 
