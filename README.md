@@ -28,6 +28,10 @@ Antedium requires the following permissions on a per server basis:
 Antedium requires the following permissions on a bot level:
 - Privileged message content intent (reading all new messages)
 
+## Public Bot
+
+To avoid setting up this bot locally, I host an instance that can be invited to your server using [this invite link](http://bot.glky.net). Alternatively, you can search for 'Antedium' on Discord's list of Verified bots and invite it directly through the client.
+
 ## Usage
 
 Once running, Antedium is a background process outside of bot owner commands. All new messages are parsed and checked for potential links, and if a match is found the fixed link is posted.
