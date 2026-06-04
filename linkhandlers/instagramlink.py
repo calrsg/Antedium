@@ -10,15 +10,15 @@ class InstagramLink(LinkInterface):
 
     @property
     def link(self) -> str:
-        return "ddinstagram.com"
+        return "zzinstagram.com"
     
     @property
     def status(self) -> str:
-        return "ddinstagram is unstable, some links may not embed correctly."
+        return None
 
     @property
     def ignore(self) -> List[str]:
-        return  ["ddinstagram.com"]
+        return  ["ddinstagram.com", "zzinstagram.com"]
 
     @property
     def replace(self) -> List[str]:
