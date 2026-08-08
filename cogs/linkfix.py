@@ -122,7 +122,7 @@ class LinkFix(commands.Cog):
         
         # Try to get server name
         server = self.bot.get_guild(server_id)
-        server_name = server.name if server else f"Unknown Server"
+        server_name = server.name if server else "Unknown Server"
         
         total_count = await self.log.get_all_server_stats(server_id)
         await ctx.send(f"{total_count} links fixed in {server_name}.")
@@ -144,7 +144,7 @@ class LinkFix(commands.Cog):
             try:
                 server_id = int(sid) if isinstance(sid, str) else sid
                 server = self.bot.get_guild(server_id)
-                server_name = server.name if server else f"Unknown Server"
+                server_name = server.name if server else "Unknown Server"
                 server_list.append(f"{count} : {server_name}")
             except (ValueError, TypeError):
                 server_list.append(f"{count} : Invalid Server")
@@ -176,7 +176,7 @@ class LinkFix(commands.Cog):
                             "display_name": user.display_name,
                             "name": user.name
                         }
-                    except:
+                    except discord.HTTPException:
                         user_name = f"User ID: {user_id}"
             
                 user_list.append(f"{count} : {user_name}")
@@ -351,7 +351,7 @@ class LinkFix(commands.Cog):
                 except discord.NotFound:
                     # User not found, add a placeholder
                     self.user_cache[user_id] = {
-                        "display_name": f"Unknown User",
+                        "display_name": "Unknown User",
                         "name": f"{user_id}"
                     }
             except Exception as e:

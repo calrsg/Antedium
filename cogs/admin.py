@@ -1,6 +1,4 @@
-import discord
 from discord.ext import commands
-from discord import app_commands
 import os
 
 class Admin(commands.Cog):
@@ -44,7 +42,7 @@ class Admin(commands.Cog):
         for filename in os.listdir("./cogs"):
             if f"{extension}.py" == filename:
                 if filename == "admin.py":
-                    await ctx.send(f"**admin** cannot be unloaded, only reloaded.")
+                    await ctx.send("**admin** cannot be unloaded, only reloaded.")
                     return
                 await self.bot.unload_extension(f"cogs.{extension}")
                 await ctx.send(f"**{extension}** unloaded successfully")

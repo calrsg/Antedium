@@ -1,0 +1,15 @@
+.git
+.github
+.venv
+__pycache__
+**/__pycache__
+*.pyc
+.vscode
+*.code-workspace
+docs
+README.md
+
+# Runtime state — never bake these into the image, they're volume-mounted
+config.json
+log.json
+linklogging/log.json

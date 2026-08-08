@@ -1,0 +1,4 @@
+# Keep CI lint checks focused on real bugs (unused/undefined names, syntax
+# errors) rather than style/modernization preferences, since this wasn't
+# previously linted.
+lint.select = ["E4", "E7", "E9", "F"]

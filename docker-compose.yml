@@ -1,0 +1,19 @@
+services:
+  antedium:
+    image: ghcr.io/calrsg/antedium:latest
+    container_name: antedium
+    restart: unless-stopped
+    volumes:
+      # Bind-mount just the two files the bot persists state in, so the
+      # container filesystem stays disposable and image updates don't
+      # touch bot config / usage stats. This deliberately points OUTSIDE
+      # the git checkout: the self-hosted deploy job re-checks-out the repo
+      # (and cleans untracked files) on every run, so anything living inside
+      # the workspace directory would get wiped on the next deploy.
+      - ${ANTEDIUM_DATA_DIR:-/opt/antedium/data}/config.json:/app/config.json
+      - ${ANTEDIUM_DATA_DIR:-/opt/antedium/data}/log.json:/app/linklogging/log.json
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
