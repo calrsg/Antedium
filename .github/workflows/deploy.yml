@@ -87,3 +87,7 @@ jobs:
           docker compose pull
           docker compose up -d
           docker image prune -f
+
+      - name: Clean up Docker credentials
+        if: always()
+        run: rm -rf /tmp/.docker
