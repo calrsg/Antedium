@@ -70,6 +70,8 @@ jobs:
     name: Deploy to Debian server
     needs: build-and-push
     runs-on: self-hosted
+    env:
+      DOCKER_CONFIG: /tmp/.docker
     steps:
       - uses: actions/checkout@v4
 
@@ -85,3 +87,7 @@ jobs:
           docker compose pull
           docker compose up -d
           docker image prune -f
+
+      - name: Clean up Docker credentials
+        if: always()
+        run: rm -rf /tmp/.docker
