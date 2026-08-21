@@ -10,11 +10,11 @@ class TiktokLink(LinkInterface):
 
     @property
     def link(self) -> str:
-        return "tnktok.com"
+        return "tiktokez.com"
 
     @property
     def ignore(self) -> List[str]:
-        return  ["tnktok.com"]
+        return  ["tiktokez.com", "tnktok.com"]
 
     @property
     def replace(self) -> List[str]:
