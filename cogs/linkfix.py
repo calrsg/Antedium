@@ -7,6 +7,7 @@ from linkhandlers.linkinterface import LinkInterface
 from linkhandlers.tiktoklink import TiktokLink
 from linkhandlers.twitterlink import TwitterLink
 from linkhandlers.instagramlink import InstagramLink
+from linkhandlers.pinterestlink import PinterestLink
 from linklogging.linklogger import LinkLogger
 
 class LinkFix(commands.Cog):
@@ -16,7 +17,7 @@ class LinkFix(commands.Cog):
         self.log = LinkLogger()
         self.user_cache = {}  # New user cache dictionary
         self.bot.loop.create_task(self.init_log())
-        self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink()]
+        self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink(), PinterestLink()]
 
     async def init_log(self):
         await self.log.load()
@@ -45,7 +46,12 @@ class LinkFix(commands.Cog):
             fixed_links = []
             for handler in handlers:
                 current_fixed = await self.fix_message(message, handler)
+                if not current_fixed:
+                    continue
                 fixed_links.append(current_fixed)
+            # Every handler may have failed to resolve a usable link
+            if len(fixed_links) == 0:
+                return
             # We read links top down so default message is reversed
             fixed_links.reverse()
             for link in fixed_links:
@@ -296,14 +302,20 @@ class LinkFix(commands.Cog):
             # Check if the selected URL has spoiler tags
             spoiler = await spoiler_check(message.content)
             # Rebuild the URL from the regex match
-            new_url = ""
+            original_url = ""
             for i in url:
                 print(i)
-                new_url += i
-            
+                original_url += i
+
+            # Let the handler expand short-form links, which may need a request
+            new_url = await handler.resolve(original_url)
+            # Skip links the handler could not resolve
+            if new_url is None:
+                continue
+
             for link in handler.replace:
                 # If the link is in the URL and not in the ignore list, replace
-                if link in new_url and not any([x in url for x in handler.ignore]):
+                if link in original_url and not any([x in url for x in handler.ignore]):
                     new_url = new_url.replace(link, handler.link)
                     # Remove www. if present
                     new_url = new_url.replace("www.", "")
@@ -319,7 +331,7 @@ class LinkFix(commands.Cog):
                     new_urls.append(new_url)
 
         # Return if any links were fixed
-        if len(urls) > 0:
+        if len(new_urls) > 0:
             await self.log.update(message.guild.id, message.author.id, log_count, handler.name)
             return new_content
         

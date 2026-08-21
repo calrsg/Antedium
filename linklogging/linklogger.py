@@ -3,6 +3,7 @@ import json
 
 from linkhandlers.instagramlink import InstagramLink
 from linkhandlers.tiktoklink import TiktokLink
+from linkhandlers.pinterestlink import PinterestLink
 from linkhandlers.twitterlink import TwitterLink
 
 class LinkLogger:
@@ -10,7 +11,7 @@ class LinkLogger:
         self.filepath = "linklogging/log.json"
         self.lock = asyncio.Lock()
         self.data = {}
-        self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink()]
+        self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink(), PinterestLink()]
 
     async def load(self):
         """
@@ -20,6 +21,9 @@ class LinkLogger:
             try:
                 with open(self.filepath, "r") as f:
                     self.data = json.load(f)
+                # Handlers added since the log was written have no section yet
+                for handler in self.linkHandlers:
+                    self.data.setdefault(handler.name, {"users": {}, "servers": {}, "links_fixed": 0})
                 print("Log loaded successfully.")
             except FileNotFoundError:
                 self.data = {

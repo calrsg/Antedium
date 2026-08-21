@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Optional
 
 class LinkInterface(ABC):
     """Abstract base class for link handlers."""
@@ -74,3 +74,23 @@ class LinkInterface(ABC):
             A regex pattern that matches the link format.
         """
         pass
+
+    async def resolve(self, url: str) -> Optional[str]:
+        """Expand a matched URL before it is rewritten.
+
+        Handlers for platforms that hand out short links may override this to
+        look the real URL up, which requires a network request. The default is
+        to hand back the URL untouched.
+
+        Parameters
+        ----------
+        url : str
+            The URL matched by the handler's pattern.
+
+        Returns
+        -------
+        str or None
+            The URL to rewrite, or None if the link could not be resolved and
+            should be skipped.
+        """
+        return url
