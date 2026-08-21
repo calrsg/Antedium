@@ -25,4 +25,4 @@ class TiktokLink(LinkInterface):
     def pattern(self) -> str:
         """Return the regex pattern for the Tiktok link.
         Matches Tiktok links with reel and post components."""
-        return r"(https?:\/\/)((vt|www)\.tiktok\.com\/)([-a-zA-Z0-9()@:%_\+.~#&=\/]*\/)"
+        return r"(https?:\/\/)((?:vt|www)\.tiktok\.com\/)([-a-zA-Z0-9()@:%_\+.~#&=\/]*\/)"
