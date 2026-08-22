@@ -10,6 +10,9 @@ from linkhandlers.instagramlink import InstagramLink
 from linkhandlers.pinterestlink import PinterestLink
 from linklogging.linklogger import LinkLogger
 
+# Small-text invite line appended beneath the fixed links in every reply
+INVITE_FOOTER = "-# [Invite Antedium to your server](https://antedium.glky.net)"
+
 class LinkFix(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -57,6 +60,7 @@ class LinkFix(commands.Cog):
             for link in fixed_links:
                 link.strip()
                 fixed += link + "\n"
+            fixed += INVITE_FOOTER
             try:
                 await asyncio.sleep(0.4)
                 await message.edit(suppress=True)
