@@ -60,7 +60,8 @@ class LinkFix(commands.Cog):
             for link in fixed_links:
                 link.strip()
                 fixed += link + "\n"
-            fixed += INVITE_FOOTER
+            # Links already end in a newline, so trim before adding the footer
+            fixed = fixed.rstrip() + "\n" + INVITE_FOOTER
             try:
                 await asyncio.sleep(0.4)
                 await message.edit(suppress=True)
