@@ -2,16 +2,9 @@ import asyncio
 
 import discord
 from discord.ext import commands
-import re
-from linkhandlers.linkinterface import LinkInterface
-from linkhandlers.tiktoklink import TiktokLink
-from linkhandlers.twitterlink import TwitterLink
-from linkhandlers.instagramlink import InstagramLink
-from linkhandlers.pinterestlink import PinterestLink
+from linkhandlers.rewrite import build_reply, default_handlers, rewrite
 from linklogging.linklogger import LinkLogger
 
-# Small-text invite line appended beneath the fixed links in every reply
-INVITE_FOOTER = "-# [Invite Antedium to your server](<https://antedium.glky.net>)"
 
 class LinkFix(commands.Cog):
     def __init__(self, bot):
@@ -20,7 +13,7 @@ class LinkFix(commands.Cog):
         self.log = LinkLogger()
         self.user_cache = {}  # New user cache dictionary
         self.bot.loop.create_task(self.init_log())
-        self.linkHandlers = [TwitterLink(), InstagramLink(), TiktokLink(), PinterestLink()]
+        self.linkHandlers = default_handlers()
 
     async def init_log(self):
         await self.log.load()
@@ -42,26 +35,14 @@ class LinkFix(commands.Cog):
                 f"{message.author.display_name} replied to your link in {message.guild.name}: "
                 f"https://discord.com/channels/{message.guild.id}/{message.channel.id}/{message.id}\n")
 
-        # Check for potential fixable links
-        handlers = await self.find_fixable_links(message)
-        if len(handlers) != 0:
-            fixed = ""
-            fixed_links = []
-            for handler in handlers:
-                current_fixed = await self.fix_message(message, handler)
-                if not current_fixed:
-                    continue
-                fixed_links.append(current_fixed)
-            # Every handler may have failed to resolve a usable link
-            if len(fixed_links) == 0:
-                return
-            # We read links top down so default message is reversed
-            fixed_links.reverse()
-            for link in fixed_links:
-                link.strip()
-                fixed += link + "\n"
-            # Links already end in a newline, so trim before adding the footer
-            fixed = fixed.rstrip() + "\n" + INVITE_FOOTER
+        # Check for fixable links
+        results = await rewrite(message.content, self.linkHandlers)
+        # Every handler may have failed to resolve a usable link
+        if len(results) != 0:
+            print(message.content)
+            for result in results:
+                await self.log.update(message.guild.id, message.author.id, len(result.links), result.handler.name)
+            fixed = build_reply(results)
             try:
                 await asyncio.sleep(0.4)
                 await message.edit(suppress=True)
@@ -252,96 +233,6 @@ class LinkFix(commands.Cog):
                     return user
         return False
 
-    async def find_fixable_links(self, message: str):
-        """
-        Preliminary check for links that may match link handlers.
-
-        Parameters
-        ----------
-        message : str
-            The message content to check for fixable links.
-        
-        Returns
-        -------
-        [LinkInterface]
-        A list of link handlers that can fix the links in the message.
-        """
-        # Iterate over handlers
-        handlers = []
-        for handler in self.linkHandlers:
-            # Return False if any handler finds a link to ignore (assumed pre-fixed URL)
-            # FIXME: Multiple links in one message may cause issues
-            # Search for valid links
-            for link in handler.replace:
-                if link in message.content:
-                    # Only add if link is not prefixed
-                    if not any(x in message.content for x in handler.ignore):
-                        handlers.append(handler)
-        return handlers
-
-    async def fix_message(self, message: str, handler: LinkInterface):
-        """
-        Fix the message content by replacing links with the handler's link format.
-        
-        Parameters
-        ----------
-        message : str
-            The message content to fix.
-            
-        handler : LinkInterface
-            The link handler to use for fixing the message.
-            
-        Returns
-        -------
-        str or False
-            The fixed message content with replaced links, or False if no links were fixed.
-        """
-        print(message.content)
-        new_content = ""
-        # Use handler regex to identify links
-        urls = re.findall(handler.pattern, message.content)
-        new_urls = []
-        # Count of links fixed for logging (deprecate in future?)
-        log_count = 0
-        for url in urls:
-            # Check if the selected URL has spoiler tags
-            spoiler = await spoiler_check(message.content)
-            # Rebuild the URL from the regex match
-            original_url = ""
-            for i in url:
-                print(i)
-                original_url += i
-
-            # Let the handler expand short-form links, which may need a request
-            new_url = await handler.resolve(original_url)
-            # Skip links the handler could not resolve
-            if new_url is None:
-                continue
-
-            for link in handler.replace:
-                # If the link is in the URL and not in the ignore list, replace
-                if link in original_url and not any([x in url for x in handler.ignore]):
-                    new_url = new_url.replace(link, handler.link)
-                    # Remove www. if present
-                    new_url = new_url.replace("www.", "")
-                    # Add spoiler tags for links originally spoilered
-                    if spoiler:
-                        new_url = "||" + new_url + "||"
-                    # Update log count
-                    if handler.status is not None:
-                        new_url += "\n" + handler.status
-                    log_count += 1
-                    # Append
-                    new_content += f"{new_url}\n"
-                    new_urls.append(new_url)
-
-        # Return if any links were fixed
-        if len(new_urls) > 0:
-            await self.log.update(message.guild.id, message.author.id, log_count, handler.name)
-            return new_content
-        
-        return False
-
     async def cache_users(self):
         """Cache users from the log data."""
         print("Caching users from log data...")
@@ -375,26 +266,6 @@ class LinkFix(commands.Cog):
                 print(f"Error caching user {user_id}: {e}")
     
         print(f"Successfully cached {cached_count} users.")
-
-async def spoiler_check(message):
-    """
-    Check if the message contains spoiler tags.
-    
-    
-    Parameters
-    ----------
-    message : str
-        The message content to check for spoiler tags.
-    
-    Returns
-    -------
-    bool
-        True if the message contains spoiler tags, False otherwise.
-    """
-    split = message.split("||")
-    if len(split) >= 2:
-        return True
-    return False
 
 async def setup(bot):
     linkfix = LinkFix(bot)

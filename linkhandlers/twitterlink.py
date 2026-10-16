@@ -13,6 +13,10 @@ class TwitterLink(LinkInterface):
         return "fxtwitter.com"
 
     @property
+    def candidates(self) -> List[str]:
+        return ["fxtwitter.com", "vxtwitter.com", "fixupx.com"]
+
+    @property
     def ignore(self) -> List[str]:
         return  ["fxtwitter.com", "vxtwitter.com"]
 

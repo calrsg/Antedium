@@ -11,6 +11,10 @@ class InstagramLink(LinkInterface):
     @property
     def link(self) -> str:
         return "oginstagram.com"
+
+    @property
+    def candidates(self) -> List[str]:
+        return ["oginstagram.com", "kkinstagram.com", "instagramez.com", "vxinstagram.com"]
     
     @property
     def status(self) -> str:
@@ -28,5 +32,5 @@ class InstagramLink(LinkInterface):
     @property
     def pattern(self) -> str:
         """Return the regex pattern for the Instagram link.
-        Matches Instagram links with reel and post components."""
-        return r"(https?:\/\/)((?:www\.)?instagram\.com)(\/reel\/|\/p\/)([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
+        Matches Instagram links with reel, reels and post components."""
+        return r"(https?:\/\/)((?:www\.)?instagram\.com)(\/reels?\/|\/p\/)([-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"

@@ -8,6 +8,11 @@ __pycache__
 *.code-workspace
 docs
 README.md
+GLOSSARY.md
+AGENTS.md
+tests
+pytest.ini
+requirements-dev.txt
 
 # Runtime state — never bake these into the image, they're volume-mounted
 config.json

@@ -1,16 +1,52 @@
 # Deployment
 
 Antedium ships as a Docker image. A GitHub Actions workflow
-([.github/workflows/deploy.yml](../.github/workflows/deploy.yml)) lints and
-compiles every push/PR, and on a successful push to `master` builds the image,
-pushes it to GHCR, and deploys it straight to the Debian server via a
-self-hosted runner.
+([.github/workflows/deploy.yml](../.github/workflows/deploy.yml)) lints,
+compiles and runs the Rewrite Checks on every push/PR, and on a successful
+push to `master` builds the image, pushes it to GHCR, and deploys it straight
+to the Debian server via a self-hosted runner.
 
 ```
-push to master ─▶ checks (ruff + compileall) ─▶ build & push image to GHCR ─▶ deploy (self-hosted runner on the server)
+push to master ─▶ checks (ruff + compileall + rewrite checks) ─▶ build & push image to GHCR ─▶ deploy ─▶ wait for "Bot is ready."
 ```
 
 Deploys only fire after checks pass, and PRs run checks without deploying.
+The deploy job fails if the container stops, restarts, or hasn't logged
+`Bot is ready.` within 60s. It does not roll back; see **Rollback** below.
+
+## Tests
+
+```bash
+pip install -r requirements-dev.txt
+pytest -m "not network"   # Rewrite Checks, offline, what CI gates on
+pytest -m network         # Provider Health Checks, needs HEALTH_PROBE_WEBHOOK_URL
+```
+
+- **Rewrite Checks** ([tests/rewrite/](../tests/rewrite/)): one case table per
+  handler in `tests/rewrite/cases/`, giving the exact Fixed Links for a
+  message, plus shape checks that post every seed link in several message
+  shapes and check the output is a well formed link. Cases record today's
+  behaviour; known bugs are `xfail` with the output we want, so fixing one
+  makes its test pass and pytest asks you to drop the marker.
+- **Provider Health Checks** ([tests/health/](../tests/health/)): run by
+  [provider-health.yml](../.github/workflows/provider-health.yml) every 6h,
+  on push, and on demand. Each Canary Post is rewritten, posted to a probe
+  channel through a webhook, and passes if Discord attaches the image or
+  video. A failing current provider posts an alert listing which Candidate
+  Providers still work. Never blocks a deploy.
+
+### Health check setup
+
+1. Make a private channel for probes (messages are deleted straight after
+   being read) and create a webhook in it. Save its URL as the repo secret
+   `HEALTH_PROBE_WEBHOOK_URL`.
+2. Create a webhook in the channel where you want alerts and save it as
+   `HEALTH_WEBHOOK_URL`.
+3. Run **Actions → Provider health → Run workflow** to check it works.
+
+Canary Posts live in [tests/health/canaries.py](../tests/health/canaries.py)
+and each handler's Candidate Providers in its `candidates` property. If a
+canary post is deleted, replace it.
 
 ## One-time server setup (Debian 12)
 
@@ -103,7 +139,7 @@ invoked from.)
   `docker pull ghcr.io/calrsg/antedium:<old commit sha>` and `docker run`/edit
   the compose file's tag temporarily — every build is also tagged with its
   commit SHA.
-- **Checks**: `ruff` is pinned to a conservative rule set in
+- **Lint**: `ruff` is pinned to a conservative rule set in
   [ruff.toml](../ruff.toml) (real bugs only — unused imports, undefined
   names, syntax errors) rather than style/formatting, since the codebase
   wasn't previously linted. Tighten it whenever you're ready to take on a

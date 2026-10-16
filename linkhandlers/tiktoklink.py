@@ -13,6 +13,10 @@ class TiktokLink(LinkInterface):
         return "kktiktok.com"
 
     @property
+    def candidates(self) -> List[str]:
+        return ["kktiktok.com", "tnktok.com", "tiktokez.com", "vxtiktok.com"]
+
+    @property
     def ignore(self) -> List[str]:
         return  ["tiktokez.com", "tnktok.com", "kktiktok.com"]
 

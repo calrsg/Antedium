@@ -1,0 +1,42 @@
+# Provider Health Checks: do the embed providers still produce embeds in
+# Discord? This deliberately does NOT gate deploys. A provider outage is a
+# third party's problem, not a broken build, and gating would also block the
+# very commit that switches a handler to a working provider. It alerts
+# instead, on every failing run, until the provider recovers or is replaced.
+name: Provider health
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  push:
+    branches: [master]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: provider-health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    name: Check embed providers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Check providers
+        env:
+          HEALTH_PROBE_WEBHOOK_URL: ${{ secrets.HEALTH_PROBE_WEBHOOK_URL }}
+          HEALTH_WEBHOOK_URL: ${{ secrets.HEALTH_WEBHOOK_URL }}
+        run: python -m tests.health.report

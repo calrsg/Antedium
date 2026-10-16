@@ -28,6 +28,20 @@ class LinkInterface(ABC):
         pass
 
     @property
+    def candidates(self) -> List[str]:
+        """Return the embed providers this handler could switch to.
+
+        Used by provider health checks to report working alternatives when the
+        current provider goes down. Default is just the current provider.
+
+        Returns
+        -------
+        List[str]
+            Provider domains, the current one first.
+        """
+        return [self.link]
+
+    @property
     def status(self) -> str:
         """Return additional status message to append to fixed link.
         Default is None, but handlers may override this.

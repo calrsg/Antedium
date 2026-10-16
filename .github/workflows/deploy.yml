@@ -25,14 +25,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff
+          pip install -r requirements-dev.txt
 
       - name: Lint
         run: ruff check .
 
       - name: Byte-compile all modules (catches syntax errors)
         run: python -m compileall -q .
+
+      - name: Rewrite checks
+        run: pytest -m "not network"
 
   build-and-push:
     name: Build & push image
@@ -87,6 +89,27 @@ jobs:
           docker compose pull
           docker compose up -d
           docker image prune -f
+
+      - name: Wait for the bot to report ready
+        run: |
+          # A crash loop shows up as a restart under restart: unless-stopped
+          restarts=$(docker inspect -f '{{.RestartCount}}' antedium)
+          for _ in $(seq 1 30); do
+            running=$(docker inspect -f '{{.State.Running}}' antedium)
+            if [ "$running" != "true" ] || [ "$(docker inspect -f '{{.RestartCount}}' antedium)" != "$restarts" ]; then
+              echo "::error::antedium container stopped or restarted after deploy"
+              docker logs --tail 50 antedium
+              exit 1
+            fi
+            if docker logs antedium 2>&1 | grep -q "Bot is ready."; then
+              echo "Bot is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::antedium did not report ready within 60s"
+          docker logs --tail 50 antedium
+          exit 1
 
       - name: Clean up Docker credentials
         if: always()
