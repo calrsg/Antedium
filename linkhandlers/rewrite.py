@@ -65,11 +65,12 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
         links were fixed.
     """
     new_urls = []
-    spoiler = spoiler_check(content)
     # Use handler regex to identify links
-    for url in re.findall(handler.pattern, content):
+    for match in re.finditer(handler.pattern, content):
+        url = match.groups(default="")
         # Rebuild the URL from the regex match
         original_url = "".join(url)
+        spoiler = spoiler_check(content, match.start())
 
         # Let the handler expand short-form links, which may need a request
         new_url = await handler.resolve(original_url)
@@ -140,18 +141,24 @@ def build_reply(results: List[HandlerResult]) -> str:
     return fixed.rstrip() + "\n" + INVITE_FOOTER
 
 
-def spoiler_check(content: str) -> bool:
+def spoiler_check(content: str, position: int) -> bool:
     """
-    Check if the message contains spoiler tags.
+    Check if a position in the message is inside spoiler tags.
 
     Parameters
     ----------
     content : str
         The message content to check for spoiler tags.
 
+    position : int
+        The index in the message to check, such as the start of a link.
+
     Returns
     -------
     bool
-        True if the message contains spoiler tags, False otherwise.
+        True if the position is between an opening and closing pair of spoiler
+        tags, False otherwise.
     """
-    return len(content.split("||")) >= 2
+    # An odd number of tags before the position means a spoiler is open
+    opened = content.count("||", 0, position) % 2 == 1
+    return opened and "||" in content[position:]
