@@ -62,10 +62,11 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
     Returns
     -------
     [str]
-        The fixed links, in the order they appear in the message. Empty if no
-        links were fixed.
+        The fixed links, in the order they first appear in the message. Empty
+        if no links were fixed.
     """
     new_urls = []
+    seen = set()
     # Use handler regex to identify links
     for match in re.finditer(handler.pattern, content):
         # Rebuild the URL from the regex match
@@ -73,6 +74,10 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
         # Skip links already pointing at an Embed Provider
         if is_already_fixed(original_url, handler):
             continue
+        # Fix each link once, however many times it is posted
+        if original_url in seen:
+            continue
+        seen.add(original_url)
         spoiler = spoiler_check(content, match.start())
 
         # Let the handler expand short-form links, which may need a request

@@ -18,6 +18,8 @@ CASES = [
     Case("spoiler", "||https://x.com/user/status/123||", ["||https://fxtwitter.com/user/status/123||"]),
     Case("two-links", "https://x.com/a/status/1 https://x.com/b/status/2",
          ["https://fxtwitter.com/a/status/1", "https://fxtwitter.com/b/status/2"]),
+    Case("same-link-twice", "https://x.com/a/status/1 https://x.com/a/status/1",
+         ["https://fxtwitter.com/a/status/1"]),
     Case("profile-ignored", "https://x.com/user"),
     Case("already-fixed", "https://fxtwitter.com/user/status/123"),
     Case("candidate-provider-ignored", "https://fixupx.com/user/status/123"),
