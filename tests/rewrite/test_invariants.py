@@ -17,13 +17,8 @@ SHAPES = {
     "query": lambda url: url + ("&" if "?" in url else "?") + "utm_source=share",
 }
 
-TRAILING_PUNCTUATION = "Punctuation straight after a link is captured into the fixed link (#11)"
-
 # Shapes that hit a known bug: shape -> (bug, handlers it affects)
-BUGGY_SHAPES = {
-    "end-of-sentence": (TRAILING_PUNCTUATION, {"TwitterLink", "InstagramLink", "TiktokLink"}),
-    "parenthesised": (TRAILING_PUNCTUATION, {"TwitterLink", "InstagramLink", "TiktokLink"}),
-}
+BUGGY_SHAPES = {}
 
 
 def params():

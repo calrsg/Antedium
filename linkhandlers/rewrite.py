@@ -69,7 +69,7 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
     for match in re.finditer(handler.pattern, content):
         url = match.groups(default="")
         # Rebuild the URL from the regex match
-        original_url = "".join(url)
+        original_url = trim_trailing_punctuation("".join(url))
         spoiler = spoiler_check(content, match.start())
 
         # Let the handler expand short-form links, which may need a request
@@ -162,3 +162,29 @@ def spoiler_check(content: str, position: int) -> bool:
     # An odd number of tags before the position means a spoiler is open
     opened = content.count("||", 0, position) % 2 == 1
     return opened and "||" in content[position:]
+
+
+def trim_trailing_punctuation(url: str) -> str:
+    """
+    Trim punctuation the link patterns capture from the text after a link.
+
+    Parameters
+    ----------
+    url : str
+        The URL matched by a handler's pattern.
+
+    Returns
+    -------
+    str
+        The URL without trailing sentence punctuation, or a closing bracket
+        that has no opening bracket in the URL.
+    """
+    while url:
+        if url[-1] in ".,:;!?":
+            url = url[:-1]
+        # Keep a closing bracket that pairs with one inside the URL
+        elif url[-1] == ")" and url.count(")") > url.count("("):
+            url = url[:-1]
+        else:
+            break
+    return url
