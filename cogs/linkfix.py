@@ -11,7 +11,7 @@ from linkhandlers.pinterestlink import PinterestLink
 from linklogging.linklogger import LinkLogger
 
 # Small-text invite line appended beneath the fixed links in every reply
-INVITE_FOOTER = "-# [Invite Antedium to your server](https://antedium.glky.net)"
+INVITE_FOOTER = "-# [Invite Antedium to your server](<https://antedium.glky.net>)"
 
 class LinkFix(commands.Cog):
     def __init__(self, bot):
