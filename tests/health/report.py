@@ -3,18 +3,19 @@
     python -m tests.health.report
 
 Reads HEALTH_PROBE_WEBHOOK_URL (where links are posted to see if they embed)
-and, optionally, HEALTH_WEBHOOK_URL (where alerts go). Exits non-zero if any
-handler's current provider failed; Candidate Providers are only reported.
+and, optionally, HEALTH_WEBHOOK_URL (where alerts go). Exits non-zero, and alerts,
+if a current provider failed or a known outage recovered; Candidate Providers
+are only reported.
 """
 import asyncio
 import os
 import sys
 from itertools import groupby
-from typing import List
+from typing import List, Tuple
 
 import aiohttp
 
-from tests.health.canaries import CANARIES
+from tests.health.canaries import CANARIES, KNOWN_OUTAGES
 from tests.health.probe import Result, WebhookProbe, check_canary
 
 # Discord rejects messages longer than this
@@ -28,15 +29,30 @@ def table(results: List[Result]) -> str:
         for r in group:
             mark = "✅" if r.ok else "❌"
             current = " (current)" if r.active else ""
-            lines.append(f"{mark} `{r.provider}`{current} {r.canary.kind}: {r.detail} <{r.canary.source}>")
+            known = " (known outage)" if r.active and r.provider in KNOWN_OUTAGES else ""
+            lines.append(f"{mark} `{r.provider}`{current}{known} {r.canary.kind}: {r.detail} <{r.canary.source}>")
     return "\n".join(lines)
 
 
-async def alert(session: aiohttp.ClientSession, webhook_url: str, results: List[Result]):
-    down = sorted({r.provider for r in results if r.active and not r.ok})
-    # Show every provider for the handlers that need a new one
-    handlers = {r.handler for r in results if r.active and not r.ok}
-    body = f"Embed provider down: {', '.join(down)}\n" + table([r for r in results if r.handler in handlers])
+def findings(results: List[Result]) -> Tuple[List[str], List[str]]:
+    """Return the current providers that are newly down, and known outages that recovered."""
+    current = [r for r in results if r.active]
+    failing = {r.provider for r in current if not r.ok}
+    down = sorted(failing - KNOWN_OUTAGES.keys())
+    recovered = sorted(p for p in KNOWN_OUTAGES if p not in failing and any(r.provider == p for r in current))
+    return down, recovered
+
+
+async def alert(session: aiohttp.ClientSession, webhook_url: str, results: List[Result],
+                down: List[str], recovered: List[str]):
+    lines = []
+    if down:
+        lines.append(f"Embed provider down: {', '.join(down)}")
+    if recovered:
+        lines.append(f"Known outage recovered, remove from KNOWN_OUTAGES: {', '.join(recovered)}")
+    # Show every provider for the handlers concerned, so a replacement can be picked
+    handlers = {r.handler for r in results if r.active and r.provider in down + recovered}
+    body = "\n".join(lines) + "\n" + table([r for r in results if r.handler in handlers])
     if len(body) > MESSAGE_LIMIT:
         body = body[:MESSAGE_LIMIT - 1] + "…"
     async with session.post(webhook_url, json={"content": body, "allowed_mentions": {"parse": []}}) as response:
@@ -55,10 +71,11 @@ async def main() -> int:
         results.sort(key=lambda r: r.handler)
 
         print(table(results))
-        if all(r.ok for r in results if r.active):
+        down, recovered = findings(results)
+        if not down and not recovered:
             return 0
         if alert_url:
-            await alert(session, alert_url, results)
+            await alert(session, alert_url, results, down, recovered)
         return 1
 
 

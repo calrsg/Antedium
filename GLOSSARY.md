@@ -24,6 +24,9 @@ An automated check that a given Source Link (or message) rewrites to the expecte
 **Provider Health Check**
 An automated check that an Embed Provider currently serves a Working Embed for a Canary Post. Failures reflect a third party, so they alert rather than gate deploys, and only a Link Handler's current Embed Provider alerts; Candidate Providers are reported for information.
 
+**Known Outage**
+A current Embed Provider acknowledged as broken with no Candidate Provider to switch to. It is still checked and reported but does not alert; its recovery does.
+
 **Canary Post**
 A stable, public post on a supported platform, used by Provider Health Checks as a known-good input.
 

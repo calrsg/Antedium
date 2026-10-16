@@ -48,6 +48,14 @@ Canary Posts live in [tests/health/canaries.py](../tests/health/canaries.py)
 and each handler's Candidate Providers in its `candidates` property. If a
 canary post is deleted, replace it.
 
+If a current provider is broken and there's nothing to switch to, add it to
+`KNOWN_OUTAGES` in the same file to stop the repeat alerts. It keeps being
+checked, and you get an alert when it recovers so you can remove the entry.
+
+The workflow runs on the self-hosted runner inside a `python:3.13-slim`
+container, since the bot's own lookups (`pin.it`) happen from the server and
+Pinterest stalls GitHub's hosted runners.
+
 ## One-time server setup (Debian 12)
 
 Run as a user with sudo access.

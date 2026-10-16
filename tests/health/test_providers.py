@@ -10,7 +10,7 @@ import os
 import aiohttp
 import pytest
 
-from tests.health.canaries import CANARIES
+from tests.health.canaries import CANARIES, KNOWN_OUTAGES
 from tests.health.probe import WebhookProbe, check_canary
 
 PROBE_URL = os.environ.get("HEALTH_PROBE_WEBHOOK_URL")
@@ -25,4 +25,6 @@ pytestmark = [
 async def test_current_provider_embeds(canary):
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=30)) as session:
         [result] = await check_canary(WebhookProbe(session, PROBE_URL), canary, candidates=False)
+    if not result.ok and result.provider in KNOWN_OUTAGES:
+        pytest.xfail(f"known outage: {KNOWN_OUTAGES[result.provider]}")
     assert result.ok, f"{result.provider}: {result.detail}"
