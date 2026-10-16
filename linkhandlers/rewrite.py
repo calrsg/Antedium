@@ -1,6 +1,7 @@
 import re
 from dataclasses import dataclass
 from typing import List
+from urllib.parse import urlsplit
 
 from linkhandlers.instagramlink import InstagramLink
 from linkhandlers.linkinterface import LinkInterface
@@ -41,8 +42,8 @@ def find_fixable_handlers(content: str, handlers: List[LinkInterface]) -> List[L
     [LinkInterface]
         A list of link handlers that can fix the links in the message.
     """
-    # Handler patterns only match source hosts, so already-fixed links are never
-    # rewritten and one in the message must not stop the others being fixed
+    # Already-fixed links are skipped one by one in fix_links, so one in the
+    # message must not stop the others being fixed
     return [handler for handler in handlers if any(link in content for link in handler.replace)]
 
 
@@ -67,9 +68,11 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
     new_urls = []
     # Use handler regex to identify links
     for match in re.finditer(handler.pattern, content):
-        url = match.groups(default="")
         # Rebuild the URL from the regex match
-        original_url = trim_trailing_punctuation("".join(url))
+        original_url = trim_trailing_punctuation("".join(match.groups(default="")))
+        # Skip links already pointing at an Embed Provider
+        if is_already_fixed(original_url, handler):
+            continue
         spoiler = spoiler_check(content, match.start())
 
         # Let the handler expand short-form links, which may need a request
@@ -79,8 +82,8 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
             continue
 
         for link in handler.replace:
-            # If the link is in the URL and not in the ignore list, replace
-            if link in original_url and not any([x in url for x in handler.ignore]):
+            # If the link is in the URL, replace
+            if link in original_url:
                 new_url = new_url.replace(link, handler.link)
                 # Remove www. if present
                 new_url = new_url.replace("www.", "")
@@ -139,6 +142,28 @@ def build_reply(results: List[HandlerResult]) -> str:
         fixed += "".join(f"{link}\n" for link in result.links) + "\n"
     # Links already end in a newline, so trim before adding the footer
     return fixed.rstrip() + "\n" + INVITE_FOOTER
+
+
+def is_already_fixed(url: str, handler: LinkInterface) -> bool:
+    """
+    Check if a link already points at one of a handler's ignored domains.
+
+    Parameters
+    ----------
+    url : str
+        The URL matched by the handler's pattern.
+
+    handler : LinkInterface
+        The link handler whose ignore list to check against.
+
+    Returns
+    -------
+    bool
+        True if the URL's host is an ignored domain or a subdomain of one,
+        False otherwise.
+    """
+    host = urlsplit(url).hostname or ""
+    return any(host == domain or host.endswith("." + domain) for domain in handler.ignore)
 
 
 def spoiler_check(content: str, position: int) -> bool:
