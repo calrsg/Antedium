@@ -28,6 +28,7 @@ class TiktokLink(LinkInterface):
     @property
     def pattern(self) -> str:
         """Return the regex pattern for the Tiktok link.
-        Matches vt.tiktok.com short links and the full www.tiktok.com paths the
-        desktop site shares, which carry a query string and no trailing slash."""
-        return r"(https?:\/\/)((?:vt|www)\.tiktok\.com)(\/[-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"
+        Matches vt. and vm.tiktok.com short links and the full tiktok.com paths,
+        with or without www., which the desktop site shares with a query string
+        and no trailing slash."""
+        return r"(https?:\/\/)((?:vt\.|vm\.|www\.)?tiktok\.com)(\/[-a-zA-Z0-9()@:%_\+.~#?&=\/]*)"

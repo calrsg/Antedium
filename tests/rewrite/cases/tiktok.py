@@ -13,11 +13,9 @@ CASES = [
     Case("vt-short", "https://vt.tiktok.com/ZSabc123/", ["https://vt.kktiktok.com/ZSabc123/"]),
     Case("already-fixed", "https://kktiktok.com/@user/video/7000000000000000000"),
     Case("candidate-provider-ignored", "https://tnktok.com/@user/video/7000000000000000000"),
-    Case("vm-short", "https://vm.tiktok.com/ZMabc123/", ["https://vm.kktiktok.com/ZMabc123/"],
-         bug="vm.tiktok.com short links are not fixed (#9)"),
+    Case("vm-short", "https://vm.tiktok.com/ZMabc123/", ["https://vm.kktiktok.com/ZMabc123/"]),
     Case("no-www", "https://tiktok.com/@user/video/7000000000000000000",
-         ["https://kktiktok.com/@user/video/7000000000000000000"],
-         bug="tiktok.com links without www. are not fixed (#9)"),
+         ["https://kktiktok.com/@user/video/7000000000000000000"]),
 ]
 
 SEEDS = [
