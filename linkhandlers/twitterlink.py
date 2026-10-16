@@ -28,5 +28,7 @@ class TwitterLink(LinkInterface):
     @property
     def pattern(self) -> str:
         """Return the regex pattern for the Twitter link.
-        Matches Twitter, X, and Nitter links with status and photo components."""
-        return r"(https?:\/\/)((?:www\.)?twitter\.com|x\.com|nitter\.net)(\/[-a-zA-Z0-9()@:%_\+.~#?&=]*)(\/status\/[-a-zA-Z0-9()@:%_\+.~#?&=]*)(\/photo\/[0-9]*)?"
+        Matches Twitter, X, and Nitter links with status and photo components.
+        A mobile. subdomain sits outside the groups, so it is dropped when the
+        URL is rebuilt from them."""
+        return r"(https?:\/\/)(?:mobile\.)?((?:www\.)?(?:twitter|x)\.com|nitter\.net)(\/[-a-zA-Z0-9()@:%_\+.~#?&=]*)(\/status\/[-a-zA-Z0-9()@:%_\+.~#?&=]*)(\/photo\/[0-9]*)?"

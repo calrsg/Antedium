@@ -27,10 +27,8 @@ CASES = [
          ["https://fxtwitter.com/b/status/2"]),
     Case("one-spoiler", "||https://x.com/a/status/1|| https://x.com/b/status/2",
          ["||https://fxtwitter.com/a/status/1||", "https://fxtwitter.com/b/status/2"]),
-    Case("www-x", "https://www.x.com/user/status/123", ["https://fxtwitter.com/user/status/123"],
-         bug="www.x.com links are not fixed (#10)"),
-    Case("mobile-twitter", "https://mobile.twitter.com/user/status/123", ["https://fxtwitter.com/user/status/123"],
-         bug="mobile.twitter.com links are not fixed (#10)"),
+    Case("www-x", "https://www.x.com/user/status/123", ["https://fxtwitter.com/user/status/123"]),
+    Case("mobile-twitter", "https://mobile.twitter.com/user/status/123", ["https://fxtwitter.com/user/status/123"]),
 ]
 
 SEEDS = [
