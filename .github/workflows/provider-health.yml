@@ -26,12 +26,10 @@ jobs:
     # bot makes itself (pin.it), which in production come from the server.
     # Pinterest stalls GitHub's hosted runners.
     runs-on: self-hosted
+    # setup-python has no builds for Debian 12, so use the bot's base image
+    container: python:3.13-slim
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
 
       - name: Install dependencies
         run: |
