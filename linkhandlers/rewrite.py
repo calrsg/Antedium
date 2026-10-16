@@ -41,15 +41,9 @@ def find_fixable_handlers(content: str, handlers: List[LinkInterface]) -> List[L
     [LinkInterface]
         A list of link handlers that can fix the links in the message.
     """
-    found = []
-    for handler in handlers:
-        # FIXME: Multiple links in one message may cause issues
-        # Search for valid links, adding each handler once however many domains match
-        if any(link in content for link in handler.replace):
-            # Only add if link is not prefixed (assumed pre-fixed URL)
-            if not any(x in content for x in handler.ignore):
-                found.append(handler)
-    return found
+    # Already-fixed links are skipped link by link in fix_links, so one in the
+    # message must not stop the handler fixing the others
+    return [handler for handler in handlers if any(link in content for link in handler.replace)]
 
 
 async def fix_links(content: str, handler: LinkInterface) -> List[str]:
