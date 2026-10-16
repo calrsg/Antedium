@@ -1,12 +1,12 @@
 import asyncio
 import time
 from dataclasses import dataclass
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Tuple
 
 import aiohttp
 
 from linkhandlers.linkinterface import LinkInterface
-from linkhandlers.rewrite import default_handlers, rewrite
+from linkhandlers.rewrite import default_handlers, find_fixable_handlers, rewrite
 from tests.health.canaries import Canary
 
 # Discord unfurls links a few seconds after the message is posted
@@ -109,12 +109,11 @@ def cache_bust(link: str) -> str:
     return f"{link}{'&' if '?' in link else '?'}_={int(time.time() * 1000)}"
 
 
-async def fixed_link_for(canary: Canary) -> tuple[LinkInterface, Optional[str]]:
+async def fixed_link_for(canary: Canary) -> Tuple[LinkInterface, Optional[str]]:
     """Run a canary through the real Rewrite, network lookups included."""
-    for handler in default_handlers():
-        for result in await rewrite(canary.source, [handler]):
-            return handler, result.links[0]
-    return None, None
+    handler = find_fixable_handlers(canary.source, default_handlers())[0]
+    results = await rewrite(canary.source, [handler])
+    return handler, results[0].links[0] if results else None
 
 
 async def check_provider(probe: WebhookProbe, canary: Canary, handler: LinkInterface,
@@ -138,8 +137,7 @@ async def check_canary(probe: WebhookProbe, canary: Canary, candidates: bool = T
     """Check a canary on its handler's current provider and, optionally, its candidates."""
     handler, fixed = await fixed_link_for(canary)
     if fixed is None:
-        return [Result(canary, handler.name if handler else "?", handler.link if handler else "?",
-                       True, False, "source link did not rewrite")]
+        return [Result(canary, handler.name, handler.link, True, False, "source link did not rewrite")]
     providers = handler.candidates if candidates else [handler.link]
     # The current provider always comes first so its result is the headline
     providers = [handler.link] + [p for p in providers if p != handler.link]

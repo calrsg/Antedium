@@ -22,7 +22,10 @@ concurrency:
 jobs:
   health:
     name: Check embed providers
-    runs-on: ubuntu-latest
+    # Discord judges the embeds, so the runner only matters for lookups the
+    # bot makes itself (pin.it), which in production come from the server.
+    # Pinterest stalls GitHub's hosted runners.
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
