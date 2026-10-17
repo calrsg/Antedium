@@ -11,6 +11,7 @@ A Source Link rewritten to point at an Embed Provider, e.g. `https://fxtwitter.c
 
 **Embed Provider**
 A third-party service that serves a Discord-friendly embed for a platform's posts (e.g. fxtwitter, kktiktok). Each Link Handler targets exactly one Embed Provider at a time.
+_Avoid_: embed fixer, fixer
 
 **Candidate Provider**
 An Embed Provider a Link Handler could switch to if its current one stops producing Working Embeds. Distinct from providers the bot merely recognises as already-fixed links, which may include dead services.
@@ -26,6 +27,9 @@ An automated check that an Embed Provider currently serves a Working Embed for a
 
 **Known Outage**
 A current Embed Provider acknowledged as broken with no Candidate Provider to switch to. It is still checked and reported but does not alert; its recovery does.
+
+**Health Report**
+The recorded outcome of the most recent run of Provider Health Checks, with when it ran. It is stale once it is older than two scheduled runs.
 
 **Canary Post**
 A stable, public post on a supported platform, used by Provider Health Checks as a known-good input.

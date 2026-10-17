@@ -46,15 +46,26 @@ pytest -m network         # Provider Health Checks, needs HEALTH_PROBE_WEBHOOK_U
 
 Canary Posts live in [tests/health/canaries.py](../tests/health/canaries.py)
 and each handler's Candidate Providers in its `candidates` property. If a
-canary post is deleted, replace it.
+canary post is deleted, replace it. A canary's `label` (e.g. `"videos"`,
+`"pin.it links"`) is what users are told isn't embedding when only it fails.
 
 If a current provider is broken and there's nothing to switch to, add it to
-`KNOWN_OUTAGES` in the same file to stop the repeat alerts. It keeps being
+`KNOWN_OUTAGES` in [linkhandlers/outages.py](../linkhandlers/outages.py) to
+stop the repeat alerts. Its reason is shown to users by `/providers`. It keeps being
 checked, and you get an alert when it recovers so you can remove the entry.
 
 The workflow runs on the self-hosted runner inside a `python:3.13-slim`
 container, since the bot's own lookups (`pin.it`) happen from the server and
 Pinterest stalls GitHub's hosted runners.
+
+Every run saves the Health Report to `/opt/antedium/data/health/health.json`,
+which the bot mounts at `/app/health` and the `/providers` command reads to
+show each platform's current provider as working, partly working, down, a
+known outage, or not checked yet. A report older than 12h (two missed runs)
+is shown as stale. The path is hardcoded in
+[provider-health.yml](../.github/workflows/provider-health.yml), so if you
+set `ANTEDIUM_DATA_DIR` for compose, change it there too. Docker creates the
+directory on first use, so there's nothing to set up.
 
 ## One-time server setup (Debian 12)
 
@@ -70,7 +81,8 @@ sudo usermod -aG docker "$USER"
 
 ### 2. Create the persistent data directory
 
-The bot persists two files: `config.json` (bot token/settings) and
+The bot persists two files (plus the Health Report, see **Health check
+setup**): `config.json` (bot token/settings) and
 `linklogging/log.json` (usage stats). These live **outside** the repo
 checkout at `/opt/antedium/data` — see the comment in
 [docker-compose.yml](../docker-compose.yml) for why.

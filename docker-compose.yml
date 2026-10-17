@@ -12,6 +12,10 @@ services:
       # the workspace directory would get wiped on the next deploy.
       - ${ANTEDIUM_DATA_DIR:-/opt/antedium/data}/config.json:/app/config.json
       - ${ANTEDIUM_DATA_DIR:-/opt/antedium/data}/log.json:/app/linklogging/log.json
+      # The Health Report the provider-health workflow writes, read by
+      # /providers. A directory rather than the file, since the file is
+      # replaced on every write and may not exist yet when the bot starts.
+      - ${ANTEDIUM_DATA_DIR:-/opt/antedium/data}/health:/app/health
     logging:
       driver: json-file
       options:

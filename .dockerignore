@@ -18,3 +18,4 @@ requirements-dev.txt
 config.json
 log.json
 linklogging/log.json
+health

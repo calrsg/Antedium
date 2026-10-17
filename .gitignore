@@ -9,5 +9,6 @@ pyc
 config.json
 log.json
 config.json
+/health/
 Antedium.code-workspace
 *.code-workspace

@@ -3,19 +3,23 @@
     python -m tests.health.report
 
 Reads HEALTH_PROBE_WEBHOOK_URL (where links are posted to see if they embed)
-and, optionally, HEALTH_WEBHOOK_URL (where alerts go). Exits non-zero, and alerts,
+and, optionally, HEALTH_WEBHOOK_URL (where alerts go) and HEALTH_RESULTS_DIR
+(where the Health Report is saved for the bot to read). Exits non-zero, and alerts,
 if a current provider failed or a known outage recovered; Candidate Providers
 are only reported.
 """
 import asyncio
 import os
 import sys
+from datetime import datetime, timezone
 from itertools import groupby
 from typing import List, Tuple
 
 import aiohttp
 
-from tests.health.canaries import CANARIES, KNOWN_OUTAGES
+from linkhandlers.healthreport import Check, HealthReport, save_report
+from linkhandlers.outages import KNOWN_OUTAGES
+from tests.health.canaries import CANARIES
 from tests.health.probe import Result, WebhookProbe, check_canary
 
 # Discord rejects messages longer than this
@@ -43,6 +47,12 @@ def findings(results: List[Result]) -> Tuple[List[str], List[str]]:
     return down, recovered
 
 
+def health_report(results: List[Result]) -> HealthReport:
+    return HealthReport(datetime.now(timezone.utc), [
+        Check(r.handler, r.provider, r.active, r.canary.label, r.ok, r.detail) for r in results
+    ])
+
+
 async def alert(session: aiohttp.ClientSession, webhook_url: str, results: List[Result],
                 down: List[str], recovered: List[str]):
     lines = []
@@ -62,6 +72,7 @@ async def alert(session: aiohttp.ClientSession, webhook_url: str, results: List[
 async def main() -> int:
     probe_url = os.environ["HEALTH_PROBE_WEBHOOK_URL"]
     alert_url = os.environ.get("HEALTH_WEBHOOK_URL")
+    report_dir = os.environ.get("HEALTH_RESULTS_DIR")
     timeout = aiohttp.ClientTimeout(total=30)
     async with aiohttp.ClientSession(timeout=timeout) as session:
         probe = WebhookProbe(session, probe_url)
@@ -71,6 +82,8 @@ async def main() -> int:
         results.sort(key=lambda r: r.handler)
 
         print(table(results))
+        if report_dir:
+            save_report(report_dir, health_report(results))
         down, recovered = findings(results)
         if not down and not recovered:
             return 0

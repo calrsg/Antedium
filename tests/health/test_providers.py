@@ -10,7 +10,8 @@ import os
 import aiohttp
 import pytest
 
-from tests.health.canaries import CANARIES, KNOWN_OUTAGES
+from linkhandlers.outages import KNOWN_OUTAGES
+from tests.health.canaries import CANARIES
 from tests.health.probe import WebhookProbe, check_canary
 
 PROBE_URL = os.environ.get("HEALTH_PROBE_WEBHOOK_URL")

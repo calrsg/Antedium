@@ -27,7 +27,12 @@ jobs:
     # Pinterest stalls GitHub's hosted runners.
     runs-on: self-hosted
     # setup-python has no builds for Debian 12, so use the bot's base image
-    container: python:3.13-slim
+    container:
+      image: python:3.13-slim
+      # The Health Report goes where the bot's container reads it, see
+      # docker-compose.yml
+      volumes:
+        - /opt/antedium/data/health:/health
     steps:
       - uses: actions/checkout@v4
 
@@ -40,4 +45,5 @@ jobs:
         env:
           HEALTH_PROBE_WEBHOOK_URL: ${{ secrets.HEALTH_PROBE_WEBHOOK_URL }}
           HEALTH_WEBHOOK_URL: ${{ secrets.HEALTH_WEBHOOK_URL }}
+          HEALTH_RESULTS_DIR: /health
         run: python -m tests.health.report
