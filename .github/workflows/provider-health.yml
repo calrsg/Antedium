@@ -47,3 +47,11 @@ jobs:
           HEALTH_WEBHOOK_URL: ${{ secrets.HEALTH_WEBHOOK_URL }}
           HEALTH_RESULTS_DIR: /health
         run: python -m tests.health.report
+
+      # The container runs as root, so the checkout and the __pycache__ it
+      # leaves are root-owned in the runner's shared workspace, and the deploy
+      # job's checkout (running as the runner user) fails to clean them up.
+      # Hand them back to whoever owns the work folder.
+      - name: Return workspace to the runner user
+        if: always()
+        run: chown -R "$(stat -c %u:%g /__w)" "$GITHUB_WORKSPACE"
