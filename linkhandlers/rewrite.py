@@ -74,8 +74,8 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
         # Skip links already pointing at an Embed Provider
         if is_already_fixed(original_url, handler):
             continue
-        # Skip links the user wrapped in <> to hide their embed
-        if is_suppressed(content, match.start(), match.end()):
+        # Skip Suppressed Links, whose embed the user chose to hide
+        if is_suppressed(content, match):
             continue
         # Fix each link once, however many times it is posted
         if original_url in seen:
@@ -174,28 +174,31 @@ def is_already_fixed(url: str, handler: LinkInterface) -> bool:
     return any(host == domain or host.endswith("." + domain) for domain in handler.ignore)
 
 
-def is_suppressed(content: str, start: int, end: int) -> bool:
+def is_suppressed(content: str, match: re.Match) -> bool:
     """
-    Check if a link in the message is wrapped in <> to suppress its embed.
+    Check if a matched link is a Suppressed Link.
 
     Parameters
     ----------
     content : str
         The message content containing the link.
 
-    start : int
-        The index in the message where the link's match starts.
-
-    end : int
-        The index in the message where the link's match ends, before any
-        trailing punctuation is trimmed.
+    match : re.Match
+        The handler pattern's match for the link.
 
     Returns
     -------
     bool
-        True if the link is directly between < and >, as Discord requires to
-        suppress an embed, False otherwise.
+        True if the URL around the match is directly between < and >, as
+        Discord requires to suppress an embed, False otherwise.
     """
+    start, end = match.span()
+    # A pattern may match only part of the URL Discord sees, so widen the
+    # match to the URL's edges before looking for the brackets
+    while start > 0 and not content[start - 1].isspace() and content[start - 1] != "<":
+        start -= 1
+    while end < len(content) and not content[end].isspace() and content[end] != ">":
+        end += 1
     return content[start - 1:start] == "<" and content[end:end + 1] == ">"
 
 

@@ -16,6 +16,13 @@ async def fixed_links(message: str) -> List[str]:
     return [link for result in results for link in result.links]
 
 
+def all_seeds():
+    """Yield every module's seeds, paired with the module they come from."""
+    for module in CASE_MODULES:
+        for seed in module.SEEDS:
+            yield module, seed
+
+
 def case_params(build, mark_bugs: bool = True):
     """Turn every module's cases into pytest params, marking known bugs."""
     params = []
