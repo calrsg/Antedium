@@ -74,6 +74,9 @@ async def fix_links(content: str, handler: LinkInterface) -> List[str]:
         # Skip links already pointing at an Embed Provider
         if is_already_fixed(original_url, handler):
             continue
+        # Skip links the user wrapped in <> to hide their embed
+        if is_suppressed(content, match.start(), match.end()):
+            continue
         # Fix each link once, however many times it is posted
         if original_url in seen:
             continue
@@ -169,6 +172,31 @@ def is_already_fixed(url: str, handler: LinkInterface) -> bool:
     """
     host = urlsplit(url).hostname or ""
     return any(host == domain or host.endswith("." + domain) for domain in handler.ignore)
+
+
+def is_suppressed(content: str, start: int, end: int) -> bool:
+    """
+    Check if a link in the message is wrapped in <> to suppress its embed.
+
+    Parameters
+    ----------
+    content : str
+        The message content containing the link.
+
+    start : int
+        The index in the message where the link's match starts.
+
+    end : int
+        The index in the message where the link's match ends, before any
+        trailing punctuation is trimmed.
+
+    Returns
+    -------
+    bool
+        True if the link is directly between < and >, as Discord requires to
+        suppress an embed, False otherwise.
+    """
+    return content[start - 1:start] == "<" and content[end:end + 1] == ">"
 
 
 def spoiler_check(content: str, position: int) -> bool:

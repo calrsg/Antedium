@@ -6,6 +6,9 @@ The unit that knows how to recognise one platform's links and turn them into Fix
 **Source Link**
 A link to a supported platform as a user posted it, e.g. `https://x.com/user/status/123`.
 
+**Suppressed Link**
+A Source Link wrapped in `<>` so Discord shows no embed for it, e.g. `<https://x.com/user/status/123>`. It is never rewritten.
+
 **Fixed Link**
 A Source Link rewritten to point at an Embed Provider, e.g. `https://fxtwitter.com/user/status/123`. This is what the bot replies with.
 

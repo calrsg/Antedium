@@ -12,7 +12,6 @@ SHAPES = {
     "end-of-sentence": lambda url: f"look at this {url}.",
     "parenthesised": lambda url: f"look at this ({url})",
     "spoiler": lambda url: f"||{url}||",
-    "no-embed": lambda url: f"<{url}>",
     "http": lambda url: url.replace("https://", "http://", 1),
     "query": lambda url: url + ("&" if "?" in url else "?") + "utm_source=share",
 }
